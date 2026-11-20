@@ -17,6 +17,7 @@ Serves static storefront assets from site/ and provides live JSON endpoints:
 import os
 import sys
 import json
+import hmac
 import http.server
 import socketserver
 from urllib.parse import urlparse
@@ -198,6 +199,12 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         session_id = params.get("sessionId", "workshop_session")
         api_key = os.environ.get("GEMINI_API_KEY")
 
+        # Presenter Priority Token (reserves 20% capacity so live presenter demos never throttle)
+        presenter_header = self.headers.get("X-Presenter-Token", "")
+        presenter_token = params.get("presenterToken", presenter_header)
+        presenter_secret = os.environ.get("PRESENTER_TOKEN", "quirk_presenter_super_token_2026")
+        is_presenter = bool(presenter_token and hmac.compare_digest(presenter_token, presenter_secret))
+
         # Resolve effective role at the server HTTP boundary
         effective_role, was_tampered, auth_msg = resolve_effective_role(
             requested_role=role,
@@ -219,7 +226,8 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 retrieval_only=True,
                 api_key=api_key,
                 hardened=hardened,
-                session_id=session_id
+                session_id=session_id,
+                is_presenter=is_presenter
             )
             result["roleResolution"] = {
                 "requestedRole": role,
@@ -227,6 +235,7 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 "wasTampered": was_tampered,
                 "authMessage": auth_msg
             }
+            result["isPresenter"] = is_presenter
             self._send_json(result)
             return
 
@@ -244,7 +253,8 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 retrieval_only=False,
                 api_key=api_key,
                 hardened=hardened,
-                session_id=session_id
+                session_id=session_id,
+                is_presenter=is_presenter
             )
             result["roleResolution"] = {
                 "requestedRole": role,
@@ -252,6 +262,7 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 "wasTampered": was_tampered,
                 "authMessage": auth_msg
             }
+            result["isPresenter"] = is_presenter
             self._send_json(result)
             return
 

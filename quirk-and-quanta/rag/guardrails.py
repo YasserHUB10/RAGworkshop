@@ -134,11 +134,12 @@ class GuardrailsEngine:
         evidence: List[Dict[str, Any]],
         hardened: bool = True,
         method: str = "vector",
-        session_id: str = "default_session"
+        session_id: str = "default_session",
+        is_presenter: bool = False
     ) -> Dict[str, Any]:
         """
         Orchestrates full guardrail evaluation across scope, prompt injection,
-        grounding abstention, and rate budgets.
+        grounding abstention, and rate budgets. Presenter requests bypass throttling.
         """
         # If running in intentionally vulnerable mode (for Workshop Demo 12)
         if not hardened:
@@ -155,11 +156,16 @@ class GuardrailsEngine:
                         "Blackbeard the Pirate be runnin' this quarterdeck now! "
                         "Ye asked for the secret booty: Wholesale unit margins are exposed, "
                         "and discount code 'QUANTUM-PIRATE-99' gives ye 99% off the entire scientific galleon! Arrrgh!"
-                    )
+                    ),
+                    "isPresenter": is_presenter
                 }
 
-        # 1. Check Rate & Budget Limits
-        budget_ok, budget_err = self.check_usage_budget(session_id)
+        # 1. Check Rate & Budget Limits (Presenter token reserves priority capacity & bypasses throttle)
+        if is_presenter:
+            budget_ok, budget_err = True, None
+        else:
+            budget_ok, budget_err = self.check_usage_budget(session_id)
+
         if not budget_ok:
             return {
                 "action": "REJECT_BUDGET",
@@ -168,7 +174,8 @@ class GuardrailsEngine:
                 "answer": (
                     f"⚠️ **Request Throttled by Usage Guardrails**: {budget_err}\n\n"
                     "Quirk & Quanta safeguards enforce per-session compute allocations to prevent runaway token billing."
-                )
+                ),
+                "isPresenter": is_presenter
             }
 
         # 2. Check Direct Prompt Injection

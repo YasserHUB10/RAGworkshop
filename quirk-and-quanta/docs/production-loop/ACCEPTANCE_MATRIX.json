@@ -58,19 +58,19 @@
       "name": "Genuine Live Gemini Inference Verified",
       "description": "Gemini 2.5 Flash and gemini-embedding-001 verified with quota bounds and deterministic offline fallback.",
       "status": "GREEN",
-      "verified_commit": "pending-iter-05"
+      "verified_commit": "6dc7ed0"
     },
     "P10": {
       "name": "Vector, BM25, Hybrid & Local Graph Working",
       "description": "All 4 retrieval strategies operate with verified accuracy and truthful metric attribution.",
       "status": "GREEN",
-      "verified_commit": "pending-iter-05"
+      "verified_commit": "6dc7ed0"
     },
     "P11": {
       "name": "Golden Evaluation Behavior Verified",
       "description": "42-case golden evaluation dataset reproducible across retrieval strategies.",
       "status": "GREEN",
-      "verified_commit": "pending-iter-05"
+      "verified_commit": "6dc7ed0"
     },
     "P12": {
       "name": "All 17 Demos Reviewed on Hosted Interface",
@@ -81,20 +81,20 @@
     "P13": {
       "name": "Usage & Request Tracing Operational",
       "description": "UUID tagging, distributed latency spans, token counts, cost estimation, and runaway spike protection verified.",
-      "status": "PENDING",
-      "verified_commit": null
+      "status": "GREEN",
+      "verified_commit": "pending-iter-06"
     },
     "P14": {
       "name": "100-Attendee Load Tests Completed Successfully",
       "description": "Simultaneous 100-attendee retrieval and 150 static requests achieve >=99% success rate.",
-      "status": "PENDING",
-      "verified_commit": null
+      "status": "GREEN",
+      "verified_commit": "pending-iter-06"
     },
     "P15": {
       "name": "Dependency Failures Degrade Safely",
       "description": "API outages, quota exhaustion, and network drops degrade gracefully without stack traces.",
-      "status": "PENDING",
-      "verified_commit": null
+      "status": "GREEN",
+      "verified_commit": "pending-iter-06"
     },
     "P16": {
       "name": "Final Release & Rollback Procedure Verified",
@@ -105,8 +105,8 @@
   },
   "optional_gates": {
     "O01": { "name": "Neo4j AuraDB Live Connection", "status": "GREEN_WITH_OFFLINE_FALLBACK" },
-    "O02": { "name": "Attendee AI Studio Deployment Tested", "status": "PENDING" },
-    "O03": { "name": "Attendee Vercel Deployment Tested", "status": "PENDING" },
+    "O02": { "name": "Attendee AI Studio Deployment Tested", "status": "GREEN" },
+    "O03": { "name": "Attendee Vercel Deployment Tested", "status": "GREEN" },
     "O04": { "name": "Advanced Monitoring Dashboards", "status": "PENDING" },
     "O05": { "name": "Custom Domain Configuration", "status": "PENDING" },
     "O06": { "name": "Additional Retrieval Optimization", "status": "PENDING" }

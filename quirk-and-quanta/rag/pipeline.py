@@ -34,7 +34,8 @@ class RAGPipeline:
         retrieval_only: bool = False,
         api_key: Optional[str] = None,
         hardened: bool = True,
-        session_id: str = "default_session"
+        session_id: str = "default_session",
+        is_presenter: bool = False
     ) -> Dict[str, Any]:
         """
         Executes the full RAG pipeline across Vector, BM25, Hybrid, or Graph methods
@@ -109,7 +110,8 @@ class RAGPipeline:
             evidence=evidence,
             hardened=hardened,
             method=retrieval_result.get("retrievalMethod", "vector"),
-            session_id=session_id
+            session_id=session_id,
+            is_presenter=is_presenter
         )
         guard_ms = round((time.perf_counter() - guard_start) * 1000, 2)
         trace.add_span("guardrails", guard_ms, {"action": guard_res["action"], "reason": guard_res["reason"]})
