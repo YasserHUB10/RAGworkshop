@@ -1,31 +1,32 @@
 # Google Cloud Build Pipeline for Quirk & Quanta
-# Project: momence-support-agent | Region: asia-south1 | Service: quirk-quanta-rag
+# Project: idc-rag-proj | Region: asia-south1 | Service: quirk-quanta-rag
+# Authoritative Artifact Registry: asia-south1-docker.pkg.dev/idc-rag-proj/quirk-quanta/rag-service
 
 steps:
-  # 1. Build container image
+  # 1. Build container image targeting Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/quirk-quanta-rag:$COMMIT_SHA'
+      - 'asia-south1-docker.pkg.dev/idc-rag-proj/quirk-quanta/rag-service:$SHORT_SHA'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/quirk-quanta-rag:latest'
+      - 'asia-south1-docker.pkg.dev/idc-rag-proj/quirk-quanta/rag-service:latest'
       - '-f'
       - 'deploy/Dockerfile'
       - '.'
 
-  # 2. Push container image to GCR / Artifact Registry
+  # 2. Push container image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'gcr.io/$PROJECT_ID/quirk-quanta-rag:$COMMIT_SHA'
+      - 'asia-south1-docker.pkg.dev/idc-rag-proj/quirk-quanta/rag-service:$SHORT_SHA'
 
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'gcr.io/$PROJECT_ID/quirk-quanta-rag:latest'
+      - 'asia-south1-docker.pkg.dev/idc-rag-proj/quirk-quanta/rag-service:latest'
 
-  # 3. Deploy to Cloud Run (asia-south1)
+  # 3. Deploy to Cloud Run in asia-south1 with dedicated runtime service account
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args:
@@ -33,12 +34,16 @@ steps:
       - 'deploy'
       - 'quirk-quanta-rag'
       - '--image'
-      - 'gcr.io/$PROJECT_ID/quirk-quanta-rag:$COMMIT_SHA'
+      - 'asia-south1-docker.pkg.dev/idc-rag-proj/quirk-quanta/rag-service:$SHORT_SHA'
       - '--region'
       - 'asia-south1'
+      - '--project'
+      - 'idc-rag-proj'
       - '--platform'
       - 'managed'
-      - '--allow-unauthenticated'
+      - '--no-allow-unauthenticated'
+      - '--service-account'
+      - 'quirk-quanta-runtime@idc-rag-proj.iam.gserviceaccount.com'
       - '--port'
       - '8080'
       - '--memory'
@@ -53,10 +58,14 @@ steps:
       - '3'
       - '--timeout'
       - '45s'
+      - '--set-env-vars'
+      - 'PYTHONUNBUFFERED=1,WORKSHOP_MODE=production,PROJECT_ID=idc-rag-proj,REGION=asia-south1'
+      - '--set-secrets'
+      - 'QUIRK_AUTH_SECRET=quirk-quanta-auth-secret:latest,PRESENTER_TOKEN=quirk-quanta-presenter-token:latest'
 
 images:
-  - 'gcr.io/$PROJECT_ID/quirk-quanta-rag:$COMMIT_SHA'
-  - 'gcr.io/$PROJECT_ID/quirk-quanta-rag:latest'
+  - 'asia-south1-docker.pkg.dev/idc-rag-proj/quirk-quanta/rag-service:$SHORT_SHA'
+  - 'asia-south1-docker.pkg.dev/idc-rag-proj/quirk-quanta/rag-service:latest'
 
 options:
   logging: CLOUD_LOGGING_ONLY

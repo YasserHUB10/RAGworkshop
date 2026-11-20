@@ -2,8 +2,8 @@
 ## "Beyond Basic RAG: Building Production-Ready AI Systems"
 **Target Audience**: ~100 Enterprise AI Engineers, Architects, and Technical Leads  
 **Workshop Duration**: 3 Hours (180 Minutes)  
-**Live Production URL**: `https://momence-support-agent.web.app/workshop.html`  
-**Presenter Priority Token**: `quirk_presenter_super_token_2026`  
+**Live Production URL**: `https://idc-rag-proj.web.app/workshop.html`  
+**Presenter Authentication**: Server-Side Cryptographic HMAC Session (`role: presenter`) or Secret Manager provisioned `PRESENTER_TOKEN`  
 
 ---
 
@@ -22,12 +22,12 @@
 ## 2. Presenter Environment Pre-Flight Checklist
 
 Before taking the stage:
-1. **Open Workshop Lab**: Navigate to `https://momence-support-agent.web.app/workshop.html` (or `http://localhost:8080/workshop.html` if running locally).
+1. **Open Workshop Lab**: Navigate to `https://idc-rag-proj.web.app/workshop.html` (or `http://localhost:8080/workshop.html` if running locally).
 2. **Activate Presenter Mode**:
-   - In browser DevTools or via the UI header, ensure the presenter token is active:
-     `localStorage.setItem('presenter_token', 'quirk_presenter_super_token_2026')`
-   - This injects `X-Presenter-Token: quirk_presenter_super_token_2026` on all requests, guaranteeing your live demonstrations are never rate-limited or throttled even if all 100 attendees spam requests simultaneously.
-3. **Verify API Health**: Check `/healthz` and `/api/rag/status`. Confirm `totalChunks: 4316` and `graphNodes: 143`.
+   - The presenter lane is defended by controlled server-side authentication (either via an HMAC-signed Bearer session token with `role: "presenter"`, or via the runtime secret `X-Presenter-Token` provisioned exclusively in GCP Secret Manager).
+   - In browser DevTools or via the UI header, you can set the presenter session token or fetch one from `/api/rag/auth/demo-token`.
+   - Presenter requests utilize a dedicated priority pool (60 req/min) that isolates stage demonstrations from attendee traffic while preventing runaway token billing loops.
+3. **Verify API Health**: Check `/health` and `/api/rag/status`. Confirm `totalChunks: 4316` and `graphNodes: 143`.
 4. **Fallback Awareness**: If upstream WiFi drops or Gemini API quotas are exhausted, the server automatically degrades to deterministic grounded synthesis with citations. You do not need to restart the server.
 
 ---

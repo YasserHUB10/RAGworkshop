@@ -21,7 +21,7 @@ Google Cloud Run stores all deployed revisions immutably. If a newly deployed ba
 gcloud run revisions list \
   --service quirk-quanta-rag \
   --region asia-south1 \
-  --project momence-support-agent
+  --project idc-rag-proj
 ```
 
 ### Step 2: Shift 100% Traffic to Previous Known Good Revision
@@ -30,13 +30,13 @@ gcloud run revisions list \
 gcloud run services update-traffic quirk-quanta-rag \
   --to-revisions=quirk-quanta-rag-00001-xyz=100 \
   --region asia-south1 \
-  --project momence-support-agent
+  --project idc-rag-proj
 ```
 *Latency: Traffic redirection takes $< 5$ seconds.*
 
 ### Step 3: Validate Restored Health
 ```bash
-curl -I https://quirk-quanta-rag-485967923485.asia-south1.run.app/healthz
+curl -I https://quirk-quanta-rag-313632490992.asia-south1.run.app/health
 # Expected: HTTP/1.1 200 OK
 ```
 
@@ -48,13 +48,13 @@ Firebase Hosting maintains a complete immutable history of deployed site release
 
 ### Step 1: Rollback via Firebase CLI
 ```bash
-firebase hosting:rollback --project momence-support-agent
+firebase hosting:rollback --project idc-rag-proj
 ```
 *This command points the public edge CDN instantly back to the preceding release.*
 
 ### Step 2: Validate Edge Health
 ```bash
-curl -I https://momence-support-agent.web.app/index.html
+curl -I https://idc-rag-proj.web.app/index.html
 # Expected: HTTP/2 200, cache-control: public, max-age=300
 ```
 

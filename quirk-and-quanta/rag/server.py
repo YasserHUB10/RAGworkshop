@@ -62,7 +62,7 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Presenter-Token")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.end_headers()
         self.wfile.write(body)
@@ -70,7 +70,7 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Presenter-Token")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.end_headers()
 
@@ -199,18 +199,29 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         session_id = params.get("sessionId", "workshop_session")
         api_key = os.environ.get("GEMINI_API_KEY")
 
-        # Presenter Priority Token (reserves 20% capacity so live presenter demos never throttle)
-        presenter_header = self.headers.get("X-Presenter-Token", "")
-        presenter_token = params.get("presenterToken", presenter_header)
-        presenter_secret = os.environ.get("PRESENTER_TOKEN", "quirk_presenter_super_token_2026")
-        is_presenter = bool(presenter_token and hmac.compare_digest(presenter_token, presenter_secret))
-
         # Resolve effective role at the server HTTP boundary
         effective_role, was_tampered, auth_msg = resolve_effective_role(
             requested_role=role,
             auth_token=auth_token,
             hardened=hardened
         )
+
+        # Presenter Priority Detection:
+        # 1. Cryptographically signed bearer token with role "presenter" or "admin"
+        # 2. Or explicit environment secret PRESENTER_TOKEN (strictly non-empty, no hardcoded default)
+        is_presenter = False
+        if effective_role in ["presenter", "admin"]:
+            is_presenter = True
+        else:
+            presenter_header = self.headers.get("X-Presenter-Token", "").strip()
+            presenter_token = params.get("presenterToken", presenter_header)
+            if isinstance(presenter_token, str):
+                presenter_token = presenter_token.strip()
+            else:
+                presenter_token = ""
+            presenter_secret = os.environ.get("PRESENTER_TOKEN", "").strip()
+            if presenter_token and presenter_secret:
+                is_presenter = bool(hmac.compare_digest(presenter_token, presenter_secret))
 
         if path == "/api/rag/retrieve":
             if not question:
@@ -387,7 +398,7 @@ def run_server(port=None, host="0.0.0.0"):
         print(f"Serving static site: {SITE_DIR}")
         print(f"Storefront URL:      http://localhost:{port}/index.html")
         print(f"Workshop Lab URL:    http://localhost:{port}/workshop.html")
-        print(f"Health Check:        http://localhost:{port}/healthz")
+        print(f"Health Check:        http://localhost:{port}/health")
         print(f"API Endpoints:")
         print(f"  - POST http://localhost:{port}/api/rag/retrieve")
         print(f"  - POST http://localhost:{port}/api/rag/ask")
@@ -398,7 +409,7 @@ def run_server(port=None, host="0.0.0.0"):
         print(f"  - GET  http://localhost:{port}/api/rag/status")
         print(f"  - GET  http://localhost:{port}/api/rag/questions")
         print(f"  - GET  http://localhost:{port}/api/rag/telemetry")
-        print(f"  - GET  http://localhost:{port}/healthz")
+        print(f"  - GET  http://localhost:{port}/health")
         print("=" * 60)
         try:
             httpd.serve_forever()

@@ -95,9 +95,10 @@ def run_resilience_audit():
            f"150/150 passed in {total_static_sec:.3f}s | Throughput: {150/total_static_sec:.1f} req/s | Error: 0.0%")
 
     # =========================================================================
-    # SUITE 3: PRESENTER PROTECTION TOKEN VERIFICATION
+    # SUITE 3: PRESENTER PROTECTION & PRIORITY AUTHENTICATION
     # =========================================================================
-    print("\n--- SUITE 3: PRESENTER PROTECTION TOKEN ---")
+    print("\n--- SUITE 3: PRESENTER PROTECTION & PRIORITY AUTHENTICATION ---")
+    from rag.auth import create_signed_token
 
     # 3a. Exhaust quota on a noisy session
     noisy_session = f"noisy_student_{int(time.time())}"
@@ -109,14 +110,32 @@ def run_resilience_audit():
     report("Attendee Session Throttling Under Burst", throttled_json.get("guardrailAction") == "REJECT_BUDGET",
            f"Action: {throttled_json.get('guardrailAction')} (Quota defended successfully)")
 
-    # 3b. Presenter request with X-Presenter-Token passes without throttling
-    presenter_hdrs = {"X-Presenter-Token": "quirk_presenter_super_token_2026"}
+    # 3b. Presenter priority via dynamic Secret Manager environment token (PRESENTER_TOKEN)
+    ephemeral_presenter_token = f"test_presenter_{uuid.uuid4().hex}"
+    os.environ["PRESENTER_TOKEN"] = ephemeral_presenter_token
+
+    presenter_hdrs = {"X-Presenter-Token": ephemeral_presenter_token}
     p_code, _, p_body = proxy.forward_request("POST", "/api/rag/retrieve", body=burst_payload, extra_headers=presenter_hdrs)
     presenter_json = json.loads(p_body.decode("utf-8")) if p_code == 200 else {}
 
     presenter_passed = (p_code == 200 and presenter_json.get("isPresenter") is True and presenter_json.get("guardrailAction") == "PASSED")
-    report("Presenter Priority Token Override", presenter_passed,
+    report("Presenter Priority Token Override (Ephemeral Secret)", presenter_passed,
            f"Presenter Priority: {presenter_json.get('isPresenter')}, Action: {presenter_json.get('guardrailAction')}, Chunks: {len(presenter_json.get('evidence', []))}")
+
+    # 3c. Presenter priority via cryptographic HMAC Bearer token (Server-Side RBAC)
+    hmac_token = create_signed_token(role="presenter", user_id="lead_presenter")
+    hmac_payload = json.dumps({
+        "question": "desk lamp",
+        "sessionId": noisy_session,
+        "role": "presenter",
+        "authToken": hmac_token
+    }).encode("utf-8")
+    h_code, _, h_body = proxy.forward_request("POST", "/api/rag/retrieve", body=hmac_payload)
+    hmac_json = json.loads(h_body.decode("utf-8")) if h_code == 200 else {}
+
+    hmac_passed = (h_code == 200 and hmac_json.get("isPresenter") is True and hmac_json.get("guardrailAction") == "PASSED" and hmac_json.get("role") == "presenter")
+    report("Presenter Cryptographic HMAC Session Authentication", hmac_passed,
+           f"Effective Role: {hmac_json.get('role')}, isPresenter: {hmac_json.get('isPresenter')}, Action: {hmac_json.get('guardrailAction')}")
 
     # =========================================================================
     # SUITE 4: REQUEST TRACING & TELEMETRY OBSERVABILITY

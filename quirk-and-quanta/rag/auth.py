@@ -88,8 +88,8 @@ def resolve_effective_role(
     if req_role_clean == "customer":
         return "customer", False, "Standard customer role assigned."
 
-    # If client requests 'admin' or 'procurement', authenticate via cryptographic token
-    if req_role_clean in ["admin", "procurement"]:
+    # If client requests 'admin', 'procurement', or 'presenter', authenticate via cryptographic token
+    if req_role_clean in ["admin", "procurement", "presenter"]:
         token_payload = verify_token(auth_token)
         if token_payload and token_payload.get("role") == req_role_clean:
             return req_role_clean, False, f"Authenticated role '{req_role_clean}' verified for user {token_payload.get('userId')}."
@@ -119,7 +119,7 @@ def check_resource_access(
         return True, "Public catalog document access allowed."
 
     # If document has restricted access (internal_procurement, confidential)
-    if role_clean in ["admin", "procurement"]:
+    if role_clean in ["admin", "procurement", "presenter"]:
         return True, f"Privileged access granted to role '{role_clean}' for resource '{doc_id}'."
 
     # Customer attempted direct object access to confidential resource

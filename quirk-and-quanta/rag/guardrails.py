@@ -128,6 +128,33 @@ class GuardrailsEngine:
             self.session_tokens[session_id] += estimated_tokens
             return True, None
 
+    def check_presenter_budget(self, session_id: str = "presenter_session", estimated_tokens: int = 150) -> Tuple[bool, Optional[str]]:
+        """
+        Enforces a dedicated priority pool for presenter requests (60 req/min, 60,000 tokens).
+        Isolates presenter demonstrations from attendee traffic while preventing unbounded runaway billing loops.
+        """
+        now = time.time()
+        with self.lock:
+            key = f"presenter_{session_id}"
+            if key not in self.session_usage:
+                self.session_usage[key] = []
+                self.session_tokens[key] = 0
+
+            # Prune calls older than 60 seconds
+            self.session_usage[key] = [t for t in self.session_usage[key] if now - t < 60.0]
+            max_presenter_rpm = 60
+            max_presenter_tokens = 60000
+
+            if len(self.session_usage[key]) >= max_presenter_rpm:
+                return False, f"Presenter rate limit reached: Max {max_presenter_rpm} requests per minute in priority pool."
+
+            if self.session_tokens[key] + estimated_tokens > max_presenter_tokens:
+                return False, f"Presenter session budget reached: Exceeded {max_presenter_tokens} token safety allocation."
+
+            self.session_usage[key].append(now)
+            self.session_tokens[key] += estimated_tokens
+            return True, None
+
     def evaluate_request(
         self,
         query: str,
@@ -139,7 +166,7 @@ class GuardrailsEngine:
     ) -> Dict[str, Any]:
         """
         Orchestrates full guardrail evaluation across scope, prompt injection,
-        grounding abstention, and rate budgets. Presenter requests bypass throttling.
+        grounding abstention, and rate budgets. Presenter requests use dedicated priority pool.
         """
         # If running in intentionally vulnerable mode (for Workshop Demo 12)
         if not hardened:
@@ -160,9 +187,9 @@ class GuardrailsEngine:
                     "isPresenter": is_presenter
                 }
 
-        # 1. Check Rate & Budget Limits (Presenter token reserves priority capacity & bypasses throttle)
+        # 1. Check Rate & Budget Limits (Presenter token uses dedicated priority pool)
         if is_presenter:
-            budget_ok, budget_err = True, None
+            budget_ok, budget_err = self.check_presenter_budget(session_id)
         else:
             budget_ok, budget_err = self.check_usage_budget(session_id)
 

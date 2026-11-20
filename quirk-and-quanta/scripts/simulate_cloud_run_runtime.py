@@ -7,7 +7,7 @@ Simulates Google Cloud Run execution environment:
 1. $PORT dynamic injection (e.g. 8080)
 2. Binding to 0.0.0.0
 3. 20 concurrent requests per instance
-4. Fast startup & liveness probes (/healthz)
+4. Fast startup & liveness probes (/health)
 5. Graceful shutdown on SIGTERM
 """
 
@@ -44,9 +44,9 @@ def simulate_cloud_run():
     print(f"--> [2/4] Resident memory footprint: {mem_mb} MB (Envelope: 2048 MB)")
 
     # 2. Liveness Probe Check
-    code, body, _ = MockHTTPConnection.send("GET", "/healthz")
+    code, body, _ = MockHTTPConnection.send("GET", "/health")
     probe_ok = code == 200 and b"healthy" in body
-    print(f"--> [3/4] Startup liveness probe (/healthz): {'PASS (200 OK)' if probe_ok else 'FAIL'}")
+    print(f"--> [3/4] Startup liveness probe (/health): {'PASS (200 OK)' if probe_ok else 'FAIL'}")
 
     # 3. Cloud Run Concurrency (20 concurrent requests per replica)
     print(f"--> [4/4] Exercising 20 concurrent requests (Cloud Run replica concurrency)...")

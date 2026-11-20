@@ -21,7 +21,7 @@ from rag.server import QuirkHTTPRequestHandler
 
 class MockProxyHTTPConnection:
     """Simulates Firebase Hosting edge reverse proxy forwarding requests to the Cloud Run backend."""
-    def __init__(self, handler_cls, client_ip="203.0.113.195", host="momence-support-agent.web.app"):
+    def __init__(self, handler_cls, client_ip="203.0.113.195", host="idc-rag-proj.web.app"):
         self.handler_cls = handler_cls
         self.client_ip = client_ip
         self.host = host
@@ -119,7 +119,7 @@ def run_checks():
             with open(firebaserc_path, "r", encoding="utf-8") as f:
                 frc = json.load(f)
             default_proj = frc.get("projects", {}).get("default")
-            if default_proj == "momence-support-agent":
+            if default_proj == "idc-rag-proj":
                 report(".firebaserc Default Project", True, f"Configured default: {default_proj}")
             else:
                 report(".firebaserc Default Project", False, f"Unexpected project: {default_proj}")
@@ -181,9 +181,9 @@ def run_checks():
     # CHECK 5: Simulated Reverse Proxy End-to-End API Calls
     proxy = MockProxyHTTPConnection(QuirkHTTPRequestHandler)
 
-    # 5a. /healthz
-    code, hdrs, body = proxy.forward_request("GET", "/healthz")
-    report("Proxy Request -> /healthz", code == 200 and b"healthy" in body, f"Status {code}, Body: {body.decode('utf-8', 'ignore')[:60]}...")
+    # 5a. /health
+    code, hdrs, body = proxy.forward_request("GET", "/health")
+    report("Proxy Request -> /health", code == 200 and b"healthy" in body, f"Status {code}, Body: {body.decode('utf-8', 'ignore')[:60]}...")
 
     # 5b. /api/rag/status
     code, hdrs, body = proxy.forward_request("GET", "/api/rag/status")

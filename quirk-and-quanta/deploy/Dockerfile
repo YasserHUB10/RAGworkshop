@@ -29,9 +29,9 @@ USER appuser
 
 EXPOSE 8080 8000
 
-# Health check using Python standard library on /healthz
+# Health check using Python standard library on /health
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD python3 -c "import os, urllib.request; p = os.environ.get('PORT', '8080'); urllib.request.urlopen(f'http://localhost:{p}/healthz', timeout=3)" || exit 1
+    CMD python3 -c "import os, urllib.request; p = os.environ.get('PORT', '8080'); urllib.request.urlopen(f'http://localhost:{p}/health', timeout=3)" || exit 1
 
 # Launch unified server (reads PORT dynamically from environment or defaults to 8080/8000)
 CMD ["python3", "rag/server.py"]

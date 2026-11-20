@@ -5,7 +5,7 @@
 Ensure the Quirk & Quanta storefront, multi-strategy RAG backend, and Workshop Lab are genuinely production-ready, reliable, secure, and performant for approximately 100 simultaneous attendees during the IDC Workshop.
 
 ### 2. Discovered Target Infrastructure
-- **GCP Project**: `momence-support-agent` (discovered via `gcloud config get-value project`)
+- **GCP Project**: `idc-rag-proj` (authoritative workshop project)
 - **Primary Region**: `asia-south1` (Mumbai)
 - **Container Service**: Cloud Run service `quirk-quanta-rag`
 - **Frontend / CDN**: Firebase Hosting (single user-facing origin with `/api/**` proxying to Cloud Run)

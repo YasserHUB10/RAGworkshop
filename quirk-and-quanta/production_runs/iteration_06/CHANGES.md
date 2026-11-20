@@ -9,7 +9,7 @@
 3. `rag/server.py`:
    - Imported `hmac`.
    - Extracted `X-Presenter-Token` header and `presenterToken` body parameter.
-   - Verified presenter token with `hmac.compare_digest` against `PRESENTER_TOKEN` environment variable (default: `quirk_presenter_super_token_2026`).
+   - Verified presenter token with `hmac.compare_digest` against `PRESENTER_TOKEN` environment variable (default: `[REDACTED_PRESENTER_TOKEN]`).
    - Attached `isPresenter: bool` to JSON API response telemetry.
 4. `scripts/verify_concurrency_resilience.py`:
    - Comprehensive test harness covering 100 concurrent retrievals, 150 static bursts, presenter token priority, request span tracing, and upstream failure degradation.

@@ -2,7 +2,7 @@
 
 ## Security Analysis & Verification
 1. **Single Public Origin (No Cross-Origin Confusion)**:
-   - All browser requests target the Firebase domain (`https://momence-support-agent.web.app`).
+   - All browser requests target the Firebase domain (`https://idc-rag-proj.web.app`).
    - Browser code never accesses Cloud Run origins directly, preventing CORS misconfigurations and origin header spoofing.
 2. **Reverse Proxy Header Injection**:
    - Simulated standard edge reverse proxy headers (`X-Forwarded-For`, `X-Forwarded-Host`, `X-Forwarded-Proto`).

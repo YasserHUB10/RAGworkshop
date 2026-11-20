@@ -8,11 +8,11 @@ Welcome to the **Quirk & Quanta** advanced RAG masterclass! This guide contains 
 
 ## 1. Live Workshop URLs
 
-- **Fictional Storefront**: [https://momence-support-agent.web.app](https://momence-support-agent.web.app)
-- **Interactive Workshop Lab**: [https://momence-support-agent.web.app/workshop.html](https://momence-support-agent.web.app/workshop.html)
-- **100-Product Catalog**: [https://momence-support-agent.web.app/products.html](https://momence-support-agent.web.app/products.html)
-- **Fictional Storyline**: [https://momence-support-agent.web.app/about.html](https://momence-support-agent.web.app/about.html)
-- **Live System Health**: [https://momence-support-agent.web.app/healthz](https://momence-support-agent.web.app/healthz)
+- **Fictional Storefront**: [https://idc-rag-proj.web.app](https://idc-rag-proj.web.app)
+- **Interactive Workshop Lab**: [https://idc-rag-proj.web.app/workshop.html](https://idc-rag-proj.web.app/workshop.html)
+- **100-Product Catalog**: [https://idc-rag-proj.web.app/products.html](https://idc-rag-proj.web.app/products.html)
+- **Fictional Storyline**: [https://idc-rag-proj.web.app/about.html](https://idc-rag-proj.web.app/about.html)
+- **Live System Health**: [https://idc-rag-proj.web.app/health](https://idc-rag-proj.web.app/health)
 
 ---
 

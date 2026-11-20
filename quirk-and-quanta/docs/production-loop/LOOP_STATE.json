@@ -5,7 +5,7 @@
   "active_milestone": "Iteration 8: Final Production Freeze, Rollback Runbook & Delivery Handover (Gate P16)",
   "baseline_commit": "0c83696",
   "current_commit": "d818856",
-  "gcp_project": "momence-support-agent",
+  "gcp_project": "idc-rag-proj",
   "region": "asia-south1",
   "cloud_run_service": "quirk-quanta-rag",
   "iterations_summary": [

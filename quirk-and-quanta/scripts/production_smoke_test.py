@@ -5,7 +5,7 @@ Zero external dependencies (uses standard library urllib, threading, json, resou
 
 Verifies:
 1. Server startup & Cloud Run PORT dynamic binding
-2. Fast liveness probe (/healthz < 10ms)
+2. Fast liveness probe (/health < 10ms)
 3. API telemetry and honest chunking classification (/api/rag/status)
 4. Static asset integrity (storefront HTML, CSS, catalog JSON)
 5. Strict path traversal security (blocking access to data/internal/ and source files)
@@ -106,7 +106,7 @@ class ProductionSmokeTester:
             self.server_thread.start()
             time.sleep(0.3)
             # Test if socket is reachable
-            req = urllib.request.Request(f"{self.base_url}/healthz")
+            req = urllib.request.Request(f"{self.base_url}/health")
             with urllib.request.urlopen(req, timeout=0.5) as r:
                 if r.status == 200:
                     self.use_mock_dispatch = False
@@ -171,19 +171,19 @@ class ProductionSmokeTester:
             results["checks"]["startup_and_memory"] = {"status": "FAIL", "error": str(e)}
             return results
 
-        # 2. Healthz Liveness Probe Check
-        code, body, lat_ms = self.request("GET", "/healthz")
+        # 2. Health Liveness Probe Check
+        code, body, lat_ms = self.request("GET", "/health")
         try:
             data = json.loads(body.decode("utf-8"))
             passed = code == 200 and data.get("status") == "healthy"
-            results["checks"]["healthz_probe"] = {
+            results["checks"]["health_probe"] = {
                 "status": "PASS" if passed else "FAIL",
                 "httpStatus": code,
                 "latencyMs": lat_ms,
                 "payload": data
             }
         except Exception as e:
-            results["checks"]["healthz_probe"] = {"status": "FAIL", "httpStatus": code, "error": str(e)}
+            results["checks"]["health_probe"] = {"status": "FAIL", "httpStatus": code, "error": str(e)}
 
         # 3. Status Telemetry & Honest Chunking Attribution
         code, body, lat_ms = self.request("GET", "/api/rag/status")

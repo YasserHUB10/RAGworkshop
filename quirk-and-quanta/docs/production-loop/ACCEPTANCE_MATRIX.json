@@ -3,7 +3,7 @@
   "phase": "Production Deployment & Workshop Readiness",
   "target_event": "IDC Workshop - Beyond Basic RAG (Nov 21, 2026)",
   "audience_capacity": 100,
-  "gcp_project_configured": "momence-support-agent",
+  "gcp_project_configured": "idc-rag-proj",
   "primary_region": "asia-south1",
   "mandatory_gates": {
     "P01": {

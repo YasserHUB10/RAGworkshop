@@ -2,7 +2,7 @@
 ## Workshop: *"Beyond Basic RAG: Building Production-Ready AI Systems"*
 **Date**: November 20, 2026 | **Event Date**: November 21, 2026  
 **Audience**: ~100 Enterprise AI Engineers & Architects  
-**Infrastructure**: Google Cloud Run (`quirk-quanta-rag`, `asia-south1`) + Firebase Hosting (`momence-support-agent`)  
+**Infrastructure**: Google Cloud Run (`quirk-quanta-rag`, `asia-south1`) + Firebase Hosting (`idc-rag-proj`)  
 
 ---
 
@@ -52,7 +52,7 @@ The application achieves **100% test pass rate across 79 unit tests and 6 produc
 2. **Quarantined Internal Data**:
    All internal procurement documents (`data/internal/`) are strictly segregated outside the web document root (`site/`). Path canonicalization prevents directory traversal breaking out of `site/`.
 3. **Presenter Protection Lane**:
-   The presenter token (`quirk_presenter_super_token_2026`) reserves dedicated capacity and bypasses session rate limits, guaranteeing that live stage demonstrations never throttle or freeze during high audience activity.
+   The presenter authentication (via HMAC session token or Secret Manager `PRESENTER_TOKEN`) reserves a dedicated priority pool (60 req/min) isolated from attendee traffic, ensuring live stage demonstrations never throttle while safeguarding the Gemini API budget.
 4. **Resilient Dual-Mode Synthesis**:
    If Gemini API keys are omitted or rate-limited, the system seamlessly transitions to deterministic grounded synthesis with citations, guaranteeing 100% uptime for the audience.
 

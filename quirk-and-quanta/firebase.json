@@ -8,6 +8,13 @@
     ],
     "rewrites": [
       {
+        "source": "/health",
+        "run": {
+          "serviceId": "quirk-quanta-rag",
+          "region": "asia-south1"
+        }
+      },
+      {
         "source": "/api/**",
         "run": {
           "serviceId": "quirk-quanta-rag",

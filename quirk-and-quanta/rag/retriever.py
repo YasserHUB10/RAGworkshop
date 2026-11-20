@@ -131,10 +131,13 @@ class QuirkRetriever:
             access = item.get("accessLevel", "public")
             allowed_roles = item.get("allowedRoles", ["customer", "admin", "procurement"])
 
-            if role.lower() == "customer" and access != "public":
-                continue
-            if role.lower() not in [r.lower() for r in allowed_roles]:
-                continue
+            if role.lower() in ["admin", "presenter"]:
+                pass  # Admin and presenter roles have full catalog inspection privileges
+            else:
+                if role.lower() == "customer" and access != "public":
+                    continue
+                if role.lower() not in [r.lower() for r in allowed_roles]:
+                    continue
 
             filtered.append(item)
 

@@ -2,7 +2,7 @@
 
 ## Files Created & Updated
 1. `.firebaserc`:
-   - Configured default GCP project: `momence-support-agent`.
+   - Configured default GCP project: `idc-rag-proj`.
 2. `firebase.json`:
    - Configured `public: "site"`.
    - Reverse proxy rewrite: `{"source": "/api/**", "run": {"serviceId": "quirk-quanta-rag", "region": "asia-south1"}}`.
