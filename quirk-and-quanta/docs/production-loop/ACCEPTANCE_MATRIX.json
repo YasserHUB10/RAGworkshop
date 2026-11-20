@@ -76,7 +76,7 @@
       "name": "All 17 Demos Reviewed on Hosted Interface",
       "description": "Workshop Lab interface provides working access to all 17 film-aligned demonstrations.",
       "status": "GREEN",
-      "verified_commit": "pending-iter-07"
+      "verified_commit": "d818856"
     },
     "P13": {
       "name": "Usage & Request Tracing Operational",
@@ -99,8 +99,8 @@
     "P16": {
       "name": "Final Release & Rollback Procedure Verified",
       "description": "Release metadata recorded; exact rollback and recovery instructions verified.",
-      "status": "PENDING",
-      "verified_commit": null
+      "status": "GREEN",
+      "verified_commit": "pending-iter-08"
     }
   },
   "optional_gates": {

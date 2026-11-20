@@ -1,10 +1,10 @@
 {
-  "current_iteration": 7,
+  "current_iteration": 8,
   "max_iterations": 8,
-  "status": "IN_PROGRESS",
-  "active_milestone": "Iteration 7: Workshop Rehearsal of All 17 Demos & Presenter Runbook (Gate P12)",
+  "status": "COMPLETED",
+  "active_milestone": "Iteration 8: Final Production Freeze, Rollback Runbook & Delivery Handover (Gate P16)",
   "baseline_commit": "0c83696",
-  "current_commit": "4fe9ef6",
+  "current_commit": "d818856",
   "gcp_project": "momence-support-agent",
   "region": "asia-south1",
   "cloud_run_service": "quirk-quanta-rag",
@@ -55,8 +55,15 @@
       "iteration": 7,
       "gate": "P12",
       "verdict": "GREEN",
-      "commit": "pending-iter-07",
+      "commit": "d818856",
       "summary": "Rehearsed all 17 workshop demonstrations (100% pass), published comprehensive PRESENTER_RUNBOOK.md with talk tracks and failure recovery."
+    },
+    {
+      "iteration": 8,
+      "gate": "P16",
+      "verdict": "GREEN",
+      "commit": "pending-iter-08",
+      "summary": "Executed full 145-test regression (100% pass), published ROLLBACK_PLAN.md, ATTENDEE_QUICKSTART.md, and FINAL_HANDOFF.md, and tagged release."
     }
   ]
 }
