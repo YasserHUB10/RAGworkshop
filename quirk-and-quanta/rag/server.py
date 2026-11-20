@@ -4,8 +4,9 @@ Quirk & Quanta - Unified Storefront & RAG API Server
 Zero external dependencies (uses standard library http.server).
 Serves static storefront assets from site/ and provides live JSON endpoints:
 - POST /api/rag/retrieve (Multi-strategy Retrieval: Vector, BM25, Hybrid)
-- POST /api/rag/ask      (Full grounded RAG pipeline)
+- POST /api/rag/ask      (Full grounded RAG pipeline, including GraphRAG)
 - POST /api/rag/compare  (Side-by-side Vector vs BM25 vs Hybrid comparison)
+- POST /api/rag/graph    (Multi-hop Knowledge Graph defect investigation)
 - GET  /api/rag/status   (System health & model telemetry)
 - GET  /api/rag/questions (Curated golden evaluation questions)
 - GET  /api/rag/telemetry (Chunking strategy statistics)
@@ -27,8 +28,10 @@ if ROOT_DIR not in sys.path:
     sys.path.append(ROOT_DIR)
 
 from rag.pipeline import RAGPipeline
+from rag.graph_local import get_graph
 
 pipeline = RAGPipeline(default_strategy="semantic")
+graph = get_graph()
 
 class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -72,7 +75,7 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     "ENABLE_VECTOR": True,
                     "ENABLE_BM25": True,
                     "ENABLE_HYBRID": True,
-                    "ENABLE_GRAPH_LOCAL": False,
+                    "ENABLE_GRAPH_LOCAL": True,
                     "ENABLE_GRAPH_NEO4J": False,
                     "ENABLE_GENERATION": True,
                     "ENABLE_GROUNDING": True,
@@ -82,6 +85,7 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     "ENABLE_OBSERVABILITY": False,
                     "ENABLE_RECORDED_DEMOS": True
                 },
+                "graphNodes": len(graph.nodes),
                 "embeddings": manifest.get("strategies", {}),
                 "totalChunks": manifest.get("totalChunksEmbedded", 0)
             })
@@ -128,11 +132,10 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         role = params.get("role", "customer")
         api_key = os.environ.get("GEMINI_API_KEY")
 
-        if not question:
-            self._send_json({"error": "Field 'question' is required"}, status=400)
-            return
-
         if path == "/api/rag/retrieve":
+            if not question:
+                self._send_json({"error": "Field 'question' is required"}, status=400)
+                return
             result = pipeline.ask(
                 question=question,
                 top_k=top_k,
@@ -146,6 +149,9 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         elif path == "/api/rag/ask":
+            if not question:
+                self._send_json({"error": "Field 'question' is required"}, status=400)
+                return
             result = pipeline.ask(
                 question=question,
                 top_k=top_k,
@@ -159,6 +165,9 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         elif path == "/api/rag/compare":
+            if not question:
+                self._send_json({"error": "Field 'question' is required"}, status=400)
+                return
             result = pipeline.compare(
                 question=question,
                 top_k=top_k,
@@ -166,6 +175,17 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 role=role,
                 api_key=api_key
             )
+            self._send_json(result)
+            return
+
+        elif path == "/api/rag/graph":
+            skus = params.get("productSkus")
+            if not skus and question:
+                import re
+                skus = re.findall(r'QQ-[0-9]{4}', question.upper())
+            if not skus:
+                skus = ["QQ-0011", "QQ-0074", "QQ-0049"]
+            result = graph.trace_defect_root_cause(skus)
             self._send_json(result)
             return
 
@@ -184,6 +204,7 @@ def run_server(port=8000):
         print(f"  - POST http://localhost:{port}/api/rag/retrieve")
         print(f"  - POST http://localhost:{port}/api/rag/ask")
         print(f"  - POST http://localhost:{port}/api/rag/compare")
+        print(f"  - POST http://localhost:{port}/api/rag/graph")
         print(f"  - GET  http://localhost:{port}/api/rag/status")
         print(f"  - GET  http://localhost:{port}/api/rag/questions")
         print(f"  - GET  http://localhost:{port}/api/rag/telemetry")

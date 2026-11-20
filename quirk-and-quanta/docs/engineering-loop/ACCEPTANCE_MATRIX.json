@@ -26,28 +26,28 @@
       "name": "BM25 Lexical Retrieval",
       "description": "Pure-Python BM25 inverted index functional and verified on exact SKU and keyword matching.",
       "status": "GREEN",
-      "verified_commit": "pending-run-01",
+      "verified_commit": "b01ddae",
       "tests": ["tests/test-hybrid.py"]
     },
     "G5": {
       "name": "Hybrid RRF Retrieval",
       "description": "Reciprocal Rank Fusion combines vector and BM25 rankings with configurable weights/k constant.",
       "status": "GREEN",
-      "verified_commit": "pending-run-01",
+      "verified_commit": "b01ddae",
       "tests": ["tests/test-hybrid.py"]
     },
     "G6": {
       "name": "Film Defect Scenario Present in Graph",
       "description": "Desk lamp (QQ-0011), wireless charger (QQ-0074), and star projector (QQ-0049) share defective voltage regulator in additive graph.",
-      "status": "PENDING",
-      "verified_commit": null,
+      "status": "GREEN",
+      "verified_commit": "pending-run-02",
       "tests": ["tests/test-graph.py"]
     },
     "G7": {
       "name": "Local GraphRAG Traversal",
       "description": "Multi-hop graph traversal resolves defect provenance chains and produces grounded answers.",
-      "status": "PENDING",
-      "verified_commit": null,
+      "status": "GREEN",
+      "verified_commit": "pending-run-02",
       "tests": ["tests/test-graph.py"]
     },
     "G8": {

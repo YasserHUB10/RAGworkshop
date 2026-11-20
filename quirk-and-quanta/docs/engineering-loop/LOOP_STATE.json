@@ -1,11 +1,22 @@
 {
-  "current_iteration": 1,
+  "current_iteration": 2,
   "max_iterations": 8,
   "status": "IN_PROGRESS",
-  "active_track": "P0-B",
-  "selected_target": "BM25 Lexical Retrieval and Hybrid Reciprocal Rank Fusion",
-  "last_completed_iteration": 0,
+  "active_track": "P0-C",
+  "selected_target": "Film-Aligned Defect Scenario & Local GraphRAG",
+  "last_completed_iteration": 1,
   "baseline_commit": "c649390",
-  "current_commit": "c649390",
-  "iterations_summary": []
+  "current_commit": "b01ddae",
+  "iterations_summary": [
+    {
+      "iteration": 1,
+      "track": "P0-B",
+      "status": "GREEN",
+      "commit": "b01ddae",
+      "gates_passed": ["G4", "G5"],
+      "tests_passed": 23,
+      "tests_failed": 0,
+      "hit_rate_improvement": "54.5% (Vector) -> 68.2% (BM25) / 59.1% (Hybrid)"
+    }
+  ]
 }

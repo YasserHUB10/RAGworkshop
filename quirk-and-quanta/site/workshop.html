@@ -288,13 +288,14 @@
                       placeholder="Type a product question, SKU (e.g. QQ-0015), or concept..."></textarea>
           </div>
 
-          <!-- Retrieval Method Selector (Gate 4 & 5) -->
+          <!-- Retrieval Method Selector (Gate 4, 5 & 7) -->
           <div class="form-group">
             <label class="form-label" for="method-select">Retrieval Method / Engine</label>
             <select id="method-select" class="form-select">
               <option value="vector" selected>Dense Semantic Vector (Cosine / gemini-embedding-001)</option>
               <option value="bm25">Lexical BM25 (Okapi Inverted Index, Exact SKU)</option>
               <option value="hybrid">Hybrid RAG (Reciprocal Rank Fusion - RRF k=60)</option>
+              <option value="graph">Knowledge Graph Traversal (Multi-hop GraphRAG)</option>
             </select>
           </div>
 
@@ -395,6 +396,19 @@
                 <span class="badge badge-teal">Vector vs BM25 vs Hybrid (RRF)</span>
               </div>
               <div id="comparison-results-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;"></div>
+            </div>
+          </div>
+
+          <!-- Graph Path Visualizer (Gate 6 & 7) -->
+          <div id="graph-path-wrapper" style="display: none; margin-bottom: 24px;">
+            <div class="lab-panel" style="background: #FEF3C7; border: 2px solid #D97706;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="font-size: 1rem; font-weight: 800; color: #92400E; margin: 0;">
+                  🕸️ Multi-Hop Knowledge Graph Traversal
+                </h3>
+                <span class="badge badge-gold" id="graph-path-badge">Root Cause Resolved</span>
+              </div>
+              <div id="graph-path-container" style="background: #FFFFFF; border-radius: 6px; padding: 16px; border: 1px solid #FCD34D;"></div>
             </div>
           </div>
 

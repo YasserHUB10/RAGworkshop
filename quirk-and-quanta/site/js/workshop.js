@@ -297,6 +297,16 @@ function renderResults(data, retrievalOnly) {
     modeBadge.className = isLive ? 'badge badge-success' : 'badge badge-navy';
   }
 
+  // Graph Path Visualization
+  const graphWrapper = document.getElementById('graph-path-wrapper');
+  const graphContainer = document.getElementById('graph-path-container');
+  if (data.graphAnalysis && graphWrapper && graphContainer) {
+    graphWrapper.style.display = 'block';
+    renderGraphAnalysis(data.graphAnalysis, graphContainer);
+  } else if (graphWrapper) {
+    graphWrapper.style.display = 'none';
+  }
+
   // Answer
   if (!retrievalOnly && data.answer) {
     if (answerWrapper) answerWrapper.style.display = 'block';
@@ -433,4 +443,70 @@ function escapeHtml(text) {
 
 function roundNumber(num, dec) {
   return Math.round(num * Math.pow(10, dec)) / Math.pow(10, dec);
+}
+
+function renderGraphAnalysis(analysis, container) {
+  const skus = analysis.productsInvestigated || [];
+  const findings = analysis.findings || [];
+  const rootFound = analysis.rootCauseIdentified;
+
+  let html = `
+    <div style="font-size: 0.8125rem; margin-bottom: 12px; color: #78350F;">
+      <strong>Investigated Products:</strong> ${skus.map(s => `<a href="product.html?sku=${s}" target="_blank" class="citation-pill" style="background:#FEF3C7; color:#92400E; border-color:#F59E0B;">${s}</a>`).join(' ')}
+    </div>
+  `;
+
+  if (!rootFound || findings.length === 0) {
+    html += `
+      <div style="padding: 12px; background: #FFFBEB; border-radius: 4px; color: #92400E; font-size: 0.8125rem;">
+        No common defect or recall notice links these products.
+      </div>
+    `;
+    container.innerHTML = html;
+    return;
+  }
+
+  findings.forEach(f => {
+    const compId = f.componentId;
+    const compName = f.componentName;
+    const recalls = f.recalls || [];
+    const suppliers = f.suppliers || [];
+
+    html += `
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <div style="background: #EFF6FF; border: 1px solid #93C5FD; border-radius: 6px; padding: 6px 12px; font-size: 0.75rem; font-weight: 700; color: #1E40AF;">
+            📦 Products: ${skus.join(', ')}
+          </div>
+          <div style="color: #F59E0B; font-weight: 900; font-size: 0.875rem;">➔ [CONTAINS] ➔</div>
+          <div style="background: #ECFDF5; border: 1px solid #6EE7B7; border-radius: 6px; padding: 6px 12px; font-size: 0.75rem; font-weight: 700; color: #065F46;">
+            ⚙️ Component: ${compId} (${escapeHtml(compName)})
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: 20px;">
+          <div style="color: #DC2626; font-weight: 900; font-size: 0.875rem;">➔ [AFFECTED_BY] ➔</div>
+          ${recalls.map(r => `
+            <div style="background: #FEF2F2; border: 1px solid #FCA5A5; border-radius: 6px; padding: 8px 12px; font-size: 0.75rem; color: #991B1B;">
+              <strong>🚨 Recall: ${r.recallId}</strong> &bull; Batch: <code>${r.batch}</code> &bull; Severity: <span class="badge badge-danger">${r.severity.toUpperCase()}</span><br>
+              <span style="font-size: 0.6875rem; color: #7F1D1D;">${escapeHtml(r.title)}</span>
+            </div>
+          `).join('')}
+        </div>
+
+        ${suppliers.length > 0 ? `
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: 20px;">
+            <div style="color: #6B7280; font-weight: 900; font-size: 0.875rem;">➔ [SUPPLIED_BY] ➔</div>
+            ${suppliers.map(s => `
+              <div style="background: #F3F4F6; border: 1px solid #D1D5DB; border-radius: 6px; padding: 6px 12px; font-size: 0.75rem; color: #374151;">
+                🏭 Supplier: <strong>${s.supplierId}</strong> (${escapeHtml(s.supplierName)})
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
 }
