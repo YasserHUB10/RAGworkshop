@@ -62,7 +62,7 @@
       "iteration": 8,
       "gate": "P16",
       "verdict": "GREEN",
-      "commit": "pending-iter-08",
+      "commit": "d1dce23",
       "summary": "Executed full 145-test regression (100% pass), published ROLLBACK_PLAN.md, ATTENDEE_QUICKSTART.md, and FINAL_HANDOFF.md, and tagged release."
     }
   ]

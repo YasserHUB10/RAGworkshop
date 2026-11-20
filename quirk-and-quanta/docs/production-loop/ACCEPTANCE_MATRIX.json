@@ -100,7 +100,7 @@
       "name": "Final Release & Rollback Procedure Verified",
       "description": "Release metadata recorded; exact rollback and recovery instructions verified.",
       "status": "GREEN",
-      "verified_commit": "pending-iter-08"
+      "verified_commit": "d1dce23"
     }
   },
   "optional_gates": {
