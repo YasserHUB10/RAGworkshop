@@ -103,7 +103,7 @@
       "name": "17 Prepared Workshop Lab Demos",
       "description": "Workshop Lab interface provides interactive access to all 17 film-aligned and technical demonstrations.",
       "status": "GREEN",
-      "verified_commit": "pending-run-08",
+      "verified_commit": "596d968",
       "tests": ["tests/test-demos.py", "site/workshop.html"]
     },
     "G16": {

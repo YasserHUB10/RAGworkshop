@@ -6,7 +6,7 @@
   "selected_target": "Complete 17 Workshop Demos, Full Regression & Delivery Handover",
   "last_completed_iteration": 8,
   "baseline_commit": "c649390",
-  "current_commit": "pending-run-08",
+  "current_commit": "596d968",
   "iterations_summary": [
     {
       "iteration": 1,
@@ -82,7 +82,7 @@
       "iteration": 8,
       "track": "Final Handover",
       "status": "GREEN",
-      "commit": "pending-run-08",
+      "commit": "596d968",
       "gates_passed": ["G15"],
       "tests_passed": 79,
       "tests_failed": 0,
