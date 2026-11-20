@@ -75,26 +75,26 @@
     "P12": {
       "name": "All 17 Demos Reviewed on Hosted Interface",
       "description": "Workshop Lab interface provides working access to all 17 film-aligned demonstrations.",
-      "status": "PENDING",
-      "verified_commit": null
+      "status": "GREEN",
+      "verified_commit": "pending-iter-07"
     },
     "P13": {
       "name": "Usage & Request Tracing Operational",
       "description": "UUID tagging, distributed latency spans, token counts, cost estimation, and runaway spike protection verified.",
       "status": "GREEN",
-      "verified_commit": "pending-iter-06"
+      "verified_commit": "4fe9ef6"
     },
     "P14": {
       "name": "100-Attendee Load Tests Completed Successfully",
       "description": "Simultaneous 100-attendee retrieval and 150 static requests achieve >=99% success rate.",
       "status": "GREEN",
-      "verified_commit": "pending-iter-06"
+      "verified_commit": "4fe9ef6"
     },
     "P15": {
       "name": "Dependency Failures Degrade Safely",
       "description": "API outages, quota exhaustion, and network drops degrade gracefully without stack traces.",
       "status": "GREEN",
-      "verified_commit": "pending-iter-06"
+      "verified_commit": "4fe9ef6"
     },
     "P16": {
       "name": "Final Release & Rollback Procedure Verified",
