@@ -16,13 +16,13 @@
       "name": "Cloud Run Service Deployed and Healthy",
       "description": "quirk-quanta-rag deployed to Cloud Run in asia-south1, health endpoint 200 OK.",
       "status": "GREEN_LOCALLY_VERIFIED",
-      "verified_commit": "pending-iter-02"
+      "verified_commit": "bf7c09b"
     },
     "P03": {
       "name": "Firebase Hosting Public URL Functional",
       "description": "Firebase Hosting configured with single public domain routing static assets and /api/** rewrites to Cloud Run.",
-      "status": "PENDING",
-      "verified_commit": null
+      "status": "GREEN_LOCALLY_VERIFIED",
+      "verified_commit": "pending-iter-03"
     },
     "P04": {
       "name": "All Storefront Pages and Assets Functional",
@@ -33,8 +33,8 @@
     "P05": {
       "name": "API Routing Works End-to-End",
       "description": "Same-origin /api/** rewrites through Firebase Hosting proxy reach Cloud Run and return valid responses within proxy timeouts.",
-      "status": "PENDING",
-      "verified_commit": null
+      "status": "GREEN",
+      "verified_commit": "pending-iter-03"
     },
     "P06": {
       "name": "Secrets Managed Securely",

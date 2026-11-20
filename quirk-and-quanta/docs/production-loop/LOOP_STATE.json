@@ -1,10 +1,10 @@
 {
-  "current_iteration": 2,
+  "current_iteration": 3,
   "max_iterations": 8,
   "status": "IN_PROGRESS",
-  "active_milestone": "Iteration 2: Cloud Run Packaging & Deployment Pipeline (Gate P02)",
+  "active_milestone": "Iteration 3: Firebase Hosting Integration, Reverse Proxy Routing & CDN Caching (Gates P03, P05)",
   "baseline_commit": "0c83696",
-  "current_commit": "e75e4aa",
+  "current_commit": "bf7c09b",
   "gcp_project": "momence-support-agent",
   "region": "asia-south1",
   "cloud_run_service": "quirk-quanta-rag",
@@ -20,7 +20,15 @@
       "iteration": 2,
       "gate": "P02",
       "verdict": "GREEN_LOCALLY_VERIFIED",
+      "commit": "bf7c09b",
       "summary": "Defined Knative service spec, Cloud Build pipeline, deployment script, and verified 20-worker concurrency locally."
+    },
+    {
+      "iteration": 3,
+      "gate": "P03, P05",
+      "verdict": "GREEN",
+      "commit": "pending-iter-03",
+      "summary": "Created firebase.json, .firebaserc, deploy_firebase.sh, and verified edge proxy rewrites and cache headers with verify_firebase_routing.py."
     }
   ]
 }
