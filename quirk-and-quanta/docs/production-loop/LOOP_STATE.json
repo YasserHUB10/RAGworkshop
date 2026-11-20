@@ -1,12 +1,26 @@
 {
-  "current_iteration": 1,
+  "current_iteration": 2,
   "max_iterations": 8,
   "status": "IN_PROGRESS",
-  "active_milestone": "Iteration 1: Production Audit, Container Verification, Security Preflight",
+  "active_milestone": "Iteration 2: Cloud Run Packaging & Deployment Pipeline (Gate P02)",
   "baseline_commit": "0c83696",
-  "current_commit": "0c83696",
+  "current_commit": "e75e4aa",
   "gcp_project": "momence-support-agent",
   "region": "asia-south1",
   "cloud_run_service": "quirk-quanta-rag",
-  "iterations_summary": []
+  "iterations_summary": [
+    {
+      "iteration": 1,
+      "gate": "P01, P04",
+      "verdict": "GREEN",
+      "commit": "e75e4aa",
+      "summary": "Fixed dynamic port binding, added /healthz probe, path canonicalization against directory traversal, and production smoke tests."
+    },
+    {
+      "iteration": 2,
+      "gate": "P02",
+      "verdict": "GREEN_LOCALLY_VERIFIED",
+      "summary": "Defined Knative service spec, Cloud Build pipeline, deployment script, and verified 20-worker concurrency locally."
+    }
+  ]
 }

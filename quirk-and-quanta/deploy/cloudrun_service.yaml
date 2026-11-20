@@ -1,0 +1,52 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: quirk-quanta-rag
+  namespace: momence-support-agent
+  labels:
+    cloud.googleapis.com/location: asia-south1
+    app: quirk-and-quanta
+    workshop: idc-rag-masterclass
+  annotations:
+    run.googleapis.com/launch-stage: GA
+    run.googleapis.com/ingress: all
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: '1'
+        autoscaling.knative.dev/maxScale: '3'
+        run.googleapis.com/cpu-throttling: 'true'
+        run.googleapis.com/startup-cpu-boost: 'true'
+    spec:
+      containerConcurrency: 20
+      timeoutSeconds: 45
+      containers:
+        - image: gcr.io/momence-support-agent/quirk-quanta-rag:latest
+          ports:
+            - name: http1
+              containerPort: 8080
+          resources:
+            limits:
+              cpu: '1000m'
+              memory: '2Gi'
+          env:
+            - name: PYTHONUNBUFFERED
+              value: '1'
+            - name: PORT
+              value: '8080'
+            - name: WORKSHOP_MODE
+              value: 'production'
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 3
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            periodSeconds: 15
+            timeoutSeconds: 3

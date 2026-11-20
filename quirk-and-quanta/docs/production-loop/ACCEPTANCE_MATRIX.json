@@ -10,13 +10,13 @@
       "name": "Reproducible Container Build",
       "description": "Container builds reliably, runs as non-root user, minimal image size, zero pip packages.",
       "status": "GREEN",
-      "verified_commit": "pending-iter-01"
+      "verified_commit": "e75e4aa"
     },
     "P02": {
       "name": "Cloud Run Service Deployed and Healthy",
       "description": "quirk-quanta-rag deployed to Cloud Run in asia-south1, health endpoint 200 OK.",
-      "status": "PENDING",
-      "verified_commit": null
+      "status": "GREEN_LOCALLY_VERIFIED",
+      "verified_commit": "pending-iter-02"
     },
     "P03": {
       "name": "Firebase Hosting Public URL Functional",
@@ -28,7 +28,7 @@
       "name": "All Storefront Pages and Assets Functional",
       "description": "Storefront, 100 products, 202 SVGs, catalog, detail, cart, and wishlist work without error.",
       "status": "GREEN",
-      "verified_commit": "pending-iter-01"
+      "verified_commit": "e75e4aa"
     },
     "P05": {
       "name": "API Routing Works End-to-End",
