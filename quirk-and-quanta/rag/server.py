@@ -180,6 +180,79 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self._send_json({}, status=404)
             return
 
+        elif path == "/api/rag/okf":
+            # OKF (Open Knowledge Format) Bundle Inspection
+            okf_dir = os.path.join(ROOT_DIR, "data", "okf")
+            manifest_file = os.path.join(okf_dir, "manifest.json")
+            entities_file = os.path.join(okf_dir, "entities.jsonl")
+            relations_file = os.path.join(okf_dir, "relations.jsonl")
+
+            if not os.path.exists(manifest_file):
+                self._send_json({"error": "OKF bundle not found"}, status=404)
+                return
+
+            with open(manifest_file, "r", encoding="utf-8") as f:
+                manifest = json.load(f)
+
+            entities = []
+            if os.path.exists(entities_file):
+                with open(entities_file, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line:
+                            entities.append(json.loads(line))
+
+            relations = []
+            if os.path.exists(relations_file):
+                with open(relations_file, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line:
+                            relations.append(json.loads(line))
+
+            self._send_json({
+                "status": "ready",
+                "format": manifest.get("format"),
+                "formatVersion": manifest.get("formatVersion"),
+                "datasetId": manifest.get("datasetId"),
+                "title": manifest.get("title"),
+                "description": manifest.get("description"),
+                "manifest": manifest,
+                "entities": entities,
+                "relations": relations
+            })
+            return
+
+        elif path == "/api/rag/chunks/inspect":
+            # Interactive Chunking Lab Inspector
+            from urllib.parse import parse_qs
+            qs = parse_qs(parsed.query)
+            target = qs.get("sourceId", qs.get("docId", ["QQ-0011"]))[0].strip()
+
+            strategies_data = {}
+            for strat, label, desc in [
+                ("semantic", "Structural / Heading-Based Section Splitting", "Splits along H1/H2 Markdown boundaries preserving full topical coherence without mid-sentence truncation."),
+                ("fixed", "Fixed-Size 450-Char Word-Bounded Splitting", "Splits at 450 characters (word bounded). Fast and uniform, but risks truncating context across arbitrary chunk borders."),
+                ("sliding", "Sliding-Window 450-Char / 150-Overlap Splitting", "Slides 450-char window with 150-char overlap. Carries context over boundaries at the cost of 28% data redundancy.")
+            ]:
+                cf = os.path.join(CHUNKS_DIR, f"chunks_{strat}.json")
+                if os.path.exists(cf):
+                    with open(cf, "r", encoding="utf-8") as f:
+                        all_c = json.load(f)
+                    matched = [c for c in all_c if c.get("sourceId") == target or c.get("docId") == target]
+                    strategies_data[strat] = {
+                        "name": label,
+                        "description": desc,
+                        "totalChunks": len(matched),
+                        "chunks": matched
+                    }
+
+            self._send_json({
+                "target": target,
+                "strategies": strategies_data
+            })
+            return
+
         # Fallback to serving static storefront assets
         super().do_GET()
 
@@ -403,6 +476,36 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             iterations = int(params.get("iterations", 40))
             spike_data = pipeline.tracer.simulate_cost_spike(iterations=iterations)
             self._send_json(spike_data)
+            return
+
+        elif path == "/api/rag/embed-query":
+            # Educational Embedding Explorer (Task 3)
+            if not question:
+                self._send_json({"error": "Field 'question' is required"}, status=400)
+                return
+
+            vec, mode = pipeline.retriever.embed_query(question, api_key)
+            norm = sum(x * x for x in vec) ** 0.5
+            norm_vec = [x / norm for x in vec] if norm > 1e-12 else vec
+
+            sku_drift_explanation = (
+                "Dense embedding models map natural language sentences into semantic latent space. "
+                "Alphanumeric SKUs (e.g. 'QQ-0015') are split by subword tokenizers into fragments ('QQ', '-', '00', '15') "
+                "whose geometric projection drifts away from exact keyword relevance towards general domain clusters. "
+                "Lexical algorithms like BM25 index exact tokens with high inverse document frequency (IDF), "
+                "succeeding where dense similarity suffers from semantic drift."
+            )
+
+            self._send_json({
+                "question": question,
+                "embeddingModel": "gemini-embedding-001",
+                "vectorDimensions": len(vec),
+                "vectorNorm": round(norm, 6),
+                "embeddingMode": mode,
+                "taskType": "RETRIEVAL_QUERY",
+                "sampleVector": [round(x, 6) for x in norm_vec[:16]],
+                "whyExactSkusFail": sku_drift_explanation
+            })
             return
 
         self._send_json({"error": f"Endpoint not found: {path}"}, status=404)

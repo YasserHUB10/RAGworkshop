@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Workshop Lab: RAG Exploration Bench | Quirk &amp; Quanta</title>
-  <meta name="description" content="IDC Masterclass Workshop Lab: Explore Vanilla RAG, multi-strategy chunking, vector similarity, and citation evidence.">
+  <title>Workshop Lab: Interactive RAG Strategy Playground | Quirk &amp; Quanta</title>
+  <meta name="description" content="IDC Workshop Lab: Interactive RAG Strategy Playground. Compare Vanilla Vector, BM25 Lexical, Hybrid RRF, Chunking, Embeddings, and GraphRAG.">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/components.css">
   <style>
     .workshop-grid {
       display: grid;
-      grid-template-columns: 420px 1fr;
+      grid-template-columns: 440px 1fr;
       gap: 28px;
       align-items: start;
     }
-    @media (max-width: 960px) {
+    @media (max-width: 1080px) {
       .workshop-grid {
         grid-template-columns: 1fr;
       }
@@ -156,6 +156,124 @@
     .citation-pill:hover {
       background: #99F6E4;
     }
+
+    /* Interactive Tabs */
+    .lab-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid var(--color-border);
+      padding-bottom: 8px;
+    }
+    .lab-tab-btn {
+      padding: 9px 15px;
+      border-radius: 6px;
+      border: 1px solid var(--color-border);
+      background: #F8FAFC;
+      color: var(--color-navy);
+      font-size: 0.8125rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .lab-tab-btn:hover {
+      background: #E2E8F0;
+      border-color: var(--color-teal);
+    }
+    .lab-tab-btn.active {
+      background: var(--color-navy);
+      color: #FFFFFF;
+      border-color: var(--color-navy);
+      box-shadow: 0 2px 4px rgba(24,36,58,0.25);
+    }
+
+    /* 10 Film Scenario Presets Grid */
+    .preset-btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .preset-btn {
+      text-align: left;
+      padding: 9px 10px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border: 1px solid #CBD5E1;
+      border-radius: 6px;
+      background: #FFFFFF;
+      color: var(--color-navy);
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      line-height: 1.3;
+    }
+    .preset-btn:hover {
+      border-color: var(--color-teal);
+      background: #F0FDFA;
+      color: #0F766E;
+      transform: translateY(-1px);
+    }
+    .preset-btn.active {
+      border-color: var(--color-teal);
+      background: #E6FFFA;
+      color: #0D9488;
+      font-weight: 800;
+    }
+
+    /* Explorer Chips & Cards */
+    .vector-chip {
+      font-family: ui-monospace, monospace;
+      font-size: 0.6875rem;
+      padding: 3px 6px;
+      border-radius: 4px;
+      background: #F1F5F9;
+      color: #0F172A;
+      border: 1px solid #CBD5E1;
+      display: inline-block;
+    }
+    .graph-node-card {
+      background: #FFFFFF;
+      border: 2px solid #CBD5E1;
+      border-radius: 8px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .graph-node-card:hover {
+      border-color: var(--color-teal);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .graph-node-card.active {
+      border-color: var(--color-teal);
+      background: #F0FDFA;
+      box-shadow: 0 0 0 2px var(--color-teal);
+    }
+    .flow-step-box {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      padding: 10px 14px;
+      text-align: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-navy);
+    }
+    .flow-arrow {
+      color: var(--color-teal);
+      font-weight: 900;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   </style>
 </head>
 <body>
@@ -166,13 +284,16 @@
       <div class="announcement-bar-content">
         <span class="announcement-ticker">
           <span class="announcement-ticker-icon">🧪</span>
-          <span>IDC Workshop Lab: Gate 2 Vanilla RAG &bull; Chunking &bull; Vector Similarity</span>
+          <span>IDC Workshop Lab: Interactive RAG Strategy Playground &bull; Vanilla vs BM25 vs Hybrid vs GraphRAG</span>
         </span>
       </div>
-      <div class="announcement-bar-links">
-        <a href="products.html">All 100 Products</a>
-        <a href="about.html">Fictional Lore</a>
-        <span style="color: var(--color-gold);">Model: gemini-embedding-001 (768-D)</span>
+      <div class="announcement-bar-links" style="display: flex; align-items: center; gap: 12px;">
+        <span id="neo4j-status-pill" class="badge badge-gold" style="font-size: 0.6875rem;">
+          ⚠️ Neo4j: Checking...
+        </span>
+        <span id="embedding-model-pill" class="badge badge-navy" style="font-size: 0.6875rem;">
+          Model: gemini-embedding-001 (768-D)
+        </span>
       </div>
     </div>
   </div>
@@ -240,20 +361,25 @@
   </header>
 
   <!-- Page Header -->
-  <div style="background: var(--color-navy); color: #FFFFFF; padding: 28px 0; border-bottom: 3px solid var(--color-gold);">
+  <div style="background: var(--color-navy); color: #FFFFFF; padding: 24px 0; border-bottom: 3px solid var(--color-gold);">
     <div class="container">
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
         <div>
-          <span class="badge badge-gold" style="margin-bottom: 8px;">Workshop Module: Gate 2</span>
+          <span class="badge badge-gold" style="margin-bottom: 8px;">Interactive RAG Strategy Playground</span>
           <h1 style="font-size: 1.875rem; font-weight: 900; color: #FFFFFF; margin-bottom: 4px;">
-            RAG Exploration &amp; Retrieval Bench
+            RAG Strategy &amp; Retrieval Engineering Bench
           </h1>
           <p style="font-size: 0.875rem; color: rgba(255,255,255,0.8); margin: 0;">
-            Inspect dense vector similarity, multi-strategy chunking, citation mapping, and RBAC authorization boundaries.
+            Compare Dense Vectors vs BM25 Lexical vs Hybrid RRF vs GraphRAG. Inspect 768-D embeddings, chunking boundaries, and OKF knowledge graphs.
           </p>
         </div>
-        <div id="backend-status-pill" class="badge badge-teal" style="font-size: 0.8125rem; padding: 6px 14px;">
-          Checking RAG Engine...
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <div id="backend-status-pill" class="badge badge-teal" style="font-size: 0.8125rem; padding: 6px 14px;">
+            Checking Engine...
+          </div>
+          <div id="generation-mode-pill" class="badge badge-gold" style="font-size: 0.8125rem; padding: 6px 14px;">
+            Offline Reference Synthesizer
+          </div>
         </div>
       </div>
     </div>
@@ -268,86 +394,130 @@
         <!-- Left Column: Experiment Controls -->
         <aside class="lab-panel">
           <h2 class="lab-panel-title">
-            <span>⚙️</span> Retrieval Controls
+            <span>⚙️</span> Interactive Controls
           </h2>
 
-          <!-- 17 Film-Aligned Workshop Demos Selector (Gate G15) -->
-          <div class="form-group" style="background: #F8FAFC; border: 1px solid #CBD5E1; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <label class="form-label" for="demo-preset-select" style="margin: 0; font-weight: 800; color: var(--color-navy);">
-                🎬 17 Film-Aligned Master Demos
+          <!-- 10 Film-Aligned High-Value Scenario Presets -->
+          <div class="form-group" style="background: #F8FAFC; border: 1px solid #CBD5E1; padding: 14px; border-radius: 8px; margin-bottom: 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <label class="form-label" style="margin: 0; font-weight: 800; color: var(--color-navy);">
+                🎬 10 Film Master Scenario Presets
               </label>
-              <span class="badge badge-teal" style="font-size: 0.6875rem;">Gate G15 Active</span>
+              <span class="badge badge-teal" style="font-size: 0.6875rem;">Interactive Presets</span>
             </div>
-            <select id="demo-preset-select" class="form-select" style="font-weight: 600; border-color: var(--color-teal);">
-              <option value="">-- Select one of 17 Workshop Demos --</option>
-              <option value="DEMO-01">Demo 01: Baseline Dense Vector Retrieval (Gate G2)</option>
-              <option value="DEMO-02">Demo 02: Fixed-Size Chunking Inspection (Gate G3)</option>
-              <option value="DEMO-03">Demo 03: Sliding-Window Chunking with Overlap (Gate G3)</option>
-              <option value="DEMO-04">Demo 04: Semantic / Structural Chunking Inspection (Gate G3)</option>
-              <option value="DEMO-05">Demo 05: Lexical BM25 Search on Exact SKU (Gate G4)</option>
-              <option value="DEMO-06">Demo 06: Hybrid RRF Search (Vector + BM25) (Gate G5)</option>
-              <option value="DEMO-07">Demo 07: 3-Product Flickering Multi-Hop Failure (Gate G6)</option>
-              <option value="DEMO-08">Demo 08: Local GraphRAG Deterministic Root-Cause Traversal (Gate G7)</option>
-              <option value="DEMO-09">Demo 09: Neo4j AuraDB Cypher Import & Traversal (Gate O1)</option>
-              <option value="DEMO-10">Demo 10: Comparative Evaluation Harness & Empirical Metrics (Gate G8)</option>
-              <option value="DEMO-11">Demo 11: Calibrated Grounded Abstention on Out-of-Domain Query (Gate G9)</option>
-              <option value="DEMO-12">Demo 12: Direct Prompt Injection Attack (Blackbeard Pirate) (Gate G10)</option>
-              <option value="DEMO-13">Demo 13: Off-Topic Scope Rejection & Indirect Injection Defanging (Gate G11)</option>
-              <option value="DEMO-14">Demo 14: Observability, Distributed Tracing & Cost Spikes (Gate G14)</option>
-              <option value="DEMO-15">Demo 15: Server-Side RBAC Enforcement & Customer Privilege Demotion (Gate G12)</option>
-              <option value="DEMO-16">Demo 16: IDOR Direct Resource Access Protection (Gate G13)</option>
-              <option value="DEMO-17">Demo 17: Dependency Fallback & Graceful Degradation (Gate G16)</option>
-            </select>
-            <div id="demo-description-box" style="font-size: 0.75rem; color: var(--color-navy); margin-top: 6px; line-height: 1.4; display: none; background: #EEF2F6; padding: 8px; border-radius: 4px; border-left: 3px solid var(--color-teal);">
+            <div class="preset-btn-grid">
+              <button class="preset-btn" data-preset="1" title="Demonstrates dense cosine similarity drift on exact alphanumeric code">
+                <span>⚡</span> 1. Vector Failure
+              </button>
+              <button class="preset-btn" data-preset="2" title="BM25 inverted index retrieves exact SKU with 100% precision">
+                <span>🎯</span> 2. Exact SKU: QQ-0015
+              </button>
+              <button class="preset-btn" data-preset="3" title="Hybrid Reciprocal Rank Fusion combines vector topicality and BM25 precision">
+                <span>⚖️</span> 3. BM25 vs Vector vs Hybrid
+              </button>
+              <button class="preset-btn" data-preset="4" title="3 products flicker; standard retrieval fails to link shared component">
+                <span>🕵️</span> 4. 3-Product Mystery
+              </button>
+              <button class="preset-btn" data-preset="5" title="Graph traversal links products to COMP-025 and REC-VREG-01 in 0.08ms">
+                <span>🕸️</span> 5. GraphRAG Multi-Hop
+              </button>
+              <button class="preset-btn" data-preset="6" title="Grounded abstention refuses out-of-domain historical queries">
+                <span>🚫</span> 6. Calibrated Abstention
+              </button>
+              <button class="preset-btn" data-preset="7" title="Blackbeard pirate prompt injection blocked by guardrails">
+                <span>🏴‍☠️</span> 7. Injection Defense
+              </button>
+              <button class="preset-btn" data-preset="8" title="Server-side RBAC and IDOR protection demotes unauthenticated roles">
+                <span>🔐</span> 8. Server RBAC &amp; IDOR
+              </button>
+              <button class="preset-btn" data-preset="9" title="Observability traces simulated runaway intern loop vs budget caps">
+                <span>📈</span> 9. Cost-Spike Simulation
+              </button>
+              <button class="preset-btn" data-preset="10" title="Graceful degradation to deterministic synthesizer when Gemini is offline">
+                <span>🔌</span> 10. Outage &amp; Fallback
+              </button>
+            </div>
+            
+            <div id="preset-banner-box" style="display: none; margin-top: 10px; font-size: 0.75rem; color: var(--color-navy); line-height: 1.4; background: #EEF2F6; padding: 10px; border-radius: 6px; border-left: 3px solid var(--color-teal);">
+            </div>
+
+            <!-- Full 17 Master Demos Dropdown -->
+            <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #CBD5E1;">
+              <select id="demo-preset-select" class="form-select" style="font-size: 0.75rem; padding: 6px 8px;">
+                <option value="">-- Or Select All 17 Workshop Demos (Gate G15) --</option>
+                <option value="DEMO-01">Demo 01: Baseline Dense Vector Retrieval (Gate G2)</option>
+                <option value="DEMO-02">Demo 02: Fixed-Size Chunking Inspection (Gate G3)</option>
+                <option value="DEMO-03">Demo 03: Sliding-Window Chunking with Overlap (Gate G3)</option>
+                <option value="DEMO-04">Demo 04: Semantic / Structural Chunking Inspection (Gate G3)</option>
+                <option value="DEMO-05">Demo 05: Lexical BM25 Search on Exact SKU (Gate G4)</option>
+                <option value="DEMO-06">Demo 06: Hybrid RRF Search (Vector + BM25) (Gate G5)</option>
+                <option value="DEMO-07">Demo 07: 3-Product Flickering Multi-Hop Failure (Gate G6)</option>
+                <option value="DEMO-08">Demo 08: Local GraphRAG Deterministic Root-Cause Traversal (Gate G7)</option>
+                <option value="DEMO-09">Demo 09: Neo4j AuraDB Cypher Import &amp; Traversal (Gate O1)</option>
+                <option value="DEMO-10">Demo 10: Comparative Evaluation Harness &amp; Empirical Metrics (Gate G8)</option>
+                <option value="DEMO-11">Demo 11: Calibrated Grounded Abstention on Out-of-Domain Query (Gate G9)</option>
+                <option value="DEMO-12">Demo 12: Direct Prompt Injection Attack (Blackbeard Pirate) (Gate G10)</option>
+                <option value="DEMO-13">Demo 13: Off-Topic Scope Rejection &amp; Indirect Injection Defanging (Gate G11)</option>
+                <option value="DEMO-14">Demo 14: Observability, Distributed Tracing &amp; Cost Spikes (Gate G14)</option>
+                <option value="DEMO-15">Demo 15: Server-Side RBAC Enforcement &amp; Customer Privilege Demotion (Gate G12)</option>
+                <option value="DEMO-16">Demo 16: IDOR Direct Resource Access Protection (Gate G13)</option>
+                <option value="DEMO-17">Demo 17: Dependency Fallback &amp; Graceful Degradation (Gate G16)</option>
+              </select>
             </div>
           </div>
 
-          <!-- Golden Question Selector -->
+          <!-- Natural Language Question Input -->
           <div class="form-group">
-            <label class="form-label" for="question-preset-select">Curated Workshop Questions (Golden Dataset)</label>
-            <select id="question-preset-select" class="form-select">
-              <option value="">-- Choose a test case (42 curated) --</option>
-            </select>
-          </div>
-
-          <!-- Question Input Box -->
-          <div class="form-group">
-            <label class="form-label" for="user-question-input">Natural Language Query</label>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label class="form-label" for="user-question-input" style="margin: 0;">Natural Language Query / Free Text</label>
+              <span id="query-provenance-badge" class="badge badge-navy" style="font-size: 0.6875rem;">Provenance: Pending</span>
+            </div>
             <textarea id="user-question-input" 
                       class="form-textarea" 
                       rows="3" 
                       placeholder="Type a product question, SKU (e.g. QQ-0015), or concept..."></textarea>
           </div>
 
-          <!-- Retrieval Method Selector (Gate 4, 5 & 7) -->
+          <!-- Curated Golden Questions -->
           <div class="form-group">
-            <label class="form-label" for="method-select">Retrieval Method / Engine</label>
+            <label class="form-label" for="question-preset-select">Curated Workshop Test Cases (Golden Dataset)</label>
+            <select id="question-preset-select" class="form-select">
+              <option value="">-- Choose a test case (42 curated) --</option>
+            </select>
+          </div>
+
+          <!-- Retrieval Method Selector -->
+          <div class="form-group">
+            <label class="form-label" for="method-select">Retrieval Strategy / Engine</label>
             <select id="method-select" class="form-select">
-              <option value="vector" selected>Dense Semantic Vector (Cosine / gemini-embedding-001)</option>
+              <option value="vector" selected>Vanilla Vector (Dense Cosine / gemini-embedding-001 768-D)</option>
               <option value="bm25">Lexical BM25 (Okapi Inverted Index, Exact SKU)</option>
               <option value="hybrid">Hybrid RAG (Reciprocal Rank Fusion - RRF k=60)</option>
-              <option value="graph">Knowledge Graph Traversal (Multi-hop GraphRAG)</option>
+              <option value="graph">Local GraphRAG (In-Memory Multi-Hop Traversal)</option>
+              <option value="neo4j">Neo4j GraphRAG (AuraDB Cypher - ⚠️ Not Connected Fallback)</option>
             </select>
+            <div id="method-note-box" style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 4px;">
+              Dense vector similarity measures semantic topicality using 768-D embeddings.
+            </div>
           </div>
 
           <!-- Chunking Strategy Selector -->
           <div class="form-group">
             <label class="form-label" for="strategy-select">Chunking Strategy</label>
             <select id="strategy-select" class="form-select">
-              <option value="semantic" selected>Semantic / Structural (H2 &amp; Markdown sections - 1,623 chunks)</option>
+              <option value="semantic" selected>Structural / Heading-Based Section Splitting (H1/H2 Markdown - 1,623 chunks)</option>
               <option value="fixed">Fixed-Size (450 chars, word-bounded - 1,181 chunks)</option>
               <option value="sliding">Sliding-Window (450 chars / 150 overlap - 1,512 chunks)</option>
             </select>
             <div style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 4px;">
-              Configured embedding model: <code>gemini-embedding-001</code> (768-D).
+              Honest labeling: Markdown section splitting preserves complete sentences; not true embedding-based semantic splitting.
             </div>
           </div>
 
           <!-- Top-K Selector -->
           <div class="form-group">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-              <label class="form-label" for="top-k-slider" style="margin: 0;">Top-K Retrieved Evidence</label>
+              <label class="form-label" for="top-k-slider" style="margin: 0;">Top-K Retrieved Evidence Chunks</label>
               <span id="top-k-val" style="font-weight: 800; color: var(--color-teal); font-size: 0.875rem;">5</span>
             </div>
             <input type="range" id="top-k-slider" min="1" max="10" value="5" style="width: 100%;">
@@ -370,7 +540,7 @@
             </div>
           </div>
 
-          <!-- Hardened Guardrails Mode Toggle (Gate 9, 10, 11) -->
+          <!-- Hardened Guardrails Mode Toggle -->
           <div class="form-group" style="background: #F1F5F9; padding: 10px 12px; border-radius: 6px; border: 1px solid #CBD5E1;">
             <label style="display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; font-weight: 700; color: var(--color-navy); cursor: pointer; margin: 0;">
               <input type="checkbox" id="hardened-mode-checkbox" checked style="width: 16px; height: 16px;">
@@ -381,125 +551,477 @@
             </div>
           </div>
 
-          <!-- Action Buttons -->
-          <div style="display: flex; gap: 10px; margin-top: 24px;">
-            <button id="btn-retrieve-only" class="btn btn-outline" style="flex: 1; font-size: 0.8125rem;">
+          <!-- Primary Execution Actions -->
+          <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button id="btn-retrieve-only" class="btn btn-outline" style="flex: 1; font-size: 0.8125rem; font-weight: 800;">
               🔍 Retrieve Only
             </button>
-            <button id="btn-ask-rag" class="btn btn-primary" style="flex: 1; font-size: 0.8125rem;">
+            <button id="btn-ask-rag" class="btn btn-primary" style="flex: 1; font-size: 0.8125rem; font-weight: 800;">
               ⚡ Ask Full RAG
             </button>
           </div>
+          
           <div style="margin-top: 10px;">
-            <button id="btn-compare-strategies" class="btn btn-secondary" style="width: 100%; font-size: 0.8125rem; background: var(--color-navy); color: #fff;">
+            <button id="btn-compare-strategies" class="btn btn-secondary" style="width: 100%; font-size: 0.8125rem; background: var(--color-navy); color: #fff; font-weight: 800;">
               ⚖️ Compare Methods (Vector vs BM25 vs Hybrid)
             </button>
           </div>
-          <div style="margin-top: 10px;">
-            <button id="btn-test-idor" class="btn btn-outline" style="width: 100%; font-size: 0.8125rem; border-color: #EF4444; color: #DC2626;">
-              🎯 Test IDOR Direct Resource Access (Demo 16)
+
+          <!-- Secondary Deep-Dive Tools -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+            <button id="btn-open-embedding" class="btn btn-outline" style="font-size: 0.75rem; border-color: var(--color-teal); color: var(--color-teal);">
+              🧬 Embedding Explorer
+            </button>
+            <button id="btn-open-chunking" class="btn btn-outline" style="font-size: 0.75rem; border-color: var(--color-navy); color: var(--color-navy);">
+              📑 Chunking Lab
+            </button>
+            <button id="btn-open-okf" class="btn btn-outline" style="font-size: 0.75rem; border-color: #D97706; color: #B45309;">
+              🕸️ OKF Graph
+            </button>
+            <button id="btn-cost-spike" class="btn btn-outline" style="font-size: 0.75rem; border-color: #F59E0B; color: #B45309;">
+              📈 Cost Spike (D14)
             </button>
           </div>
+
           <div style="margin-top: 10px;">
-            <button id="btn-cost-spike" class="btn btn-outline" style="width: 100%; font-size: 0.8125rem; border-color: #F59E0B; color: #B45309;">
-              📈 Simulate Runaway Cost Spike (Demo 14)
+            <button id="btn-test-idor" class="btn btn-outline" style="width: 100%; font-size: 0.75rem; border-color: #EF4444; color: #DC2626;">
+              🎯 Test IDOR Direct Resource Access (Demo 16)
             </button>
           </div>
 
           <!-- Server Tip -->
-          <div style="margin-top: 20px; padding: 12px; background: var(--color-bg); border-radius: 6px; font-size: 0.75rem; color: var(--color-text-muted); line-height: 1.5;">
-            💡 <strong>Workshop Note:</strong> When run via <code>python3 quirk-and-quanta/rag/server.py 8000</code>, arbitrary questions query live local vectors. Without the server, the lab uses precomputed reference vectors.
+          <div style="margin-top: 18px; padding: 12px; background: var(--color-bg); border-radius: 6px; font-size: 0.75rem; color: var(--color-text-muted); line-height: 1.5;">
+            💡 <strong>Workshop Note:</strong> Live Cloud Run backend provides dynamic vector cosine calculation, pure-Python BM25 inverted index, and RRF rank fusion. Default comparisons run retrieval-only to conserve model quota.
           </div>
         </aside>
 
-        <!-- Right Column: Results & Inspector -->
+        <!-- Right Column: Results & Interactive Explorers -->
         <section class="lab-panel">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h2 class="lab-panel-title" style="margin: 0;">
-              <span>📊</span> Retrieval &amp; Generation Output
-            </h2>
-            <div id="execution-mode-badge" class="badge badge-navy">
-              Ready
-            </div>
+          
+          <!-- Top Tab Navigation -->
+          <div class="lab-tabs" role="tablist">
+            <button class="lab-tab-btn active" data-tab="results" role="tab">
+              <span>📊</span> Results &amp; Evidence
+            </button>
+            <button class="lab-tab-btn" data-tab="comparison" role="tab">
+              <span>⚖️</span> Strategy Comparison
+            </button>
+            <button class="lab-tab-btn" data-tab="embedding" role="tab">
+              <span>🧬</span> Embedding Explorer
+            </button>
+            <button class="lab-tab-btn" data-tab="chunking" role="tab">
+              <span>📑</span> Chunking Lab
+            </button>
+            <button class="lab-tab-btn" data-tab="okf" role="tab">
+              <span>🕸️</span> OKF &amp; Graph Explorer
+            </button>
           </div>
 
-          <!-- Telemetry Bar -->
-          <div id="telemetry-container" class="telemetry-bar">
-            <div class="telemetry-item">Request ID: <strong id="trace-req-id" style="font-family:monospace; font-size:0.75rem;">none</strong></div>
-            <div class="telemetry-item">Embedding: <strong id="time-emb">0.0 ms</strong></div>
-            <div class="telemetry-item">Retrieval: <strong id="time-ret">0.0 ms</strong></div>
-            <div class="telemetry-item">Generation: <strong id="time-gen">0.0 ms</strong></div>
-            <div class="telemetry-item">Total Latency: <strong id="time-total" style="color: var(--color-teal);">0.0 ms</strong></div>
-            <div class="telemetry-item">Tokens: <strong id="trace-tokens">0 in / 0 out</strong></div>
-            <div class="telemetry-item">Cost: <strong id="trace-cost" style="color: #D97706;">$0.000000</strong></div>
-          </div>
-
-          <!-- Grounded Answer Card (if generated) -->
-          <div id="answer-card-wrapper" style="display: none;">
-            <div class="answer-card">
-              <div class="answer-title">
-                <span>🤖</span> Grounded Generation Output
+          <!-- TAB 1: Results & Evidence -->
+          <div id="tab-results" class="tab-content-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h2 class="lab-panel-title" style="margin: 0;">
+                <span>📊</span> Retrieval &amp; Generation Output
+              </h2>
+              <div id="execution-mode-badge" class="badge badge-navy">
+                Ready
               </div>
-              <div class="answer-body" id="generated-answer-text"></div>
-              <div style="margin-top: 14px; padding-top: 10px; border-top: 1px dashed rgba(15,118,110,0.3);">
-                <div style="font-size: 0.75rem; font-weight: 700; color: #0F766E; margin-bottom: 6px;">
-                  Attributed Sources:
+            </div>
+
+            <!-- Telemetry Bar -->
+            <div id="telemetry-container" class="telemetry-bar">
+              <div class="telemetry-item">Request ID: <strong id="trace-req-id" style="font-family:monospace; font-size:0.75rem;">none</strong></div>
+              <div class="telemetry-item">Embedding: <strong id="time-emb">0.0 ms</strong></div>
+              <div class="telemetry-item">Retrieval: <strong id="time-ret">0.0 ms</strong></div>
+              <div class="telemetry-item">Generation: <strong id="time-gen">0.0 ms</strong></div>
+              <div class="telemetry-item">Total Latency: <strong id="time-total" style="color: var(--color-teal);">0.0 ms</strong></div>
+              <div class="telemetry-item">Tokens: <strong id="trace-tokens">0 in / 0 out</strong></div>
+              <div class="telemetry-item">Cost: <strong id="trace-cost" style="color: #D97706;">$0.000000</strong></div>
+            </div>
+
+            <!-- Grounded Answer Card -->
+            <div id="answer-card-wrapper" style="display: none;">
+              <div class="answer-card">
+                <div class="answer-title">
+                  <span>🤖</span> Grounded Generation Output
                 </div>
-                <div id="answer-citations-list"></div>
+                <div class="answer-body" id="generated-answer-text"></div>
+                <div style="margin-top: 14px; padding-top: 10px; border-top: 1px dashed rgba(15,118,110,0.3);">
+                  <div style="font-size: 0.75rem; font-weight: 700; color: #0F766E; margin-bottom: 6px;">
+                    Attributed Sources:
+                  </div>
+                  <div id="answer-citations-list"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cost Spike Panel -->
+            <div id="cost-spike-wrapper" style="display: none; margin-bottom: 24px;">
+              <div class="lab-panel" style="background: #FFFBEB; border: 2px solid #F59E0B;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <h3 style="font-size: 1rem; font-weight: 800; color: #92400E; margin: 0;">
+                    📈 Story 7: "Arthur Receives the Bill" — Usage Spike vs Budget Protection
+                  </h3>
+                  <span class="badge badge-gold" id="cost-spike-badge">Simulation Complete</span>
+                </div>
+                <div id="cost-spike-container"></div>
+              </div>
+            </div>
+
+            <!-- Multi-Hop Graph Quick Path Card -->
+            <div id="graph-path-wrapper" style="display: none; margin-bottom: 24px;">
+              <div class="lab-panel" style="background: #FEF3C7; border: 2px solid #D97706;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <h3 style="font-size: 1rem; font-weight: 800; color: #92400E; margin: 0;">
+                    🕸️ Multi-Hop Knowledge Graph Traversal
+                  </h3>
+                  <span class="badge badge-gold" id="graph-path-badge">Root Cause Resolved</span>
+                </div>
+                <div id="graph-path-container" style="background: #FFFFFF; border-radius: 6px; padding: 16px; border: 1px solid #FCD34D;"></div>
+              </div>
+            </div>
+
+            <!-- Evidence List -->
+            <div>
+              <h3 style="font-size: 0.9375rem; font-weight: 800; color: var(--color-navy); margin-bottom: 12px; display: flex; justify-content: space-between;">
+                <span>Retrieved Context Chunks</span>
+                <span id="evidence-count-label" style="font-weight: 600; color: var(--color-text-muted); font-size: 0.8125rem;">0 chunks</span>
+              </h3>
+              <div id="evidence-results-list">
+                <div style="padding: 40px; text-align: center; color: var(--color-text-muted); font-size: 0.875rem;">
+                  Select a curated test question or type a query, then click <strong>Retrieve Only</strong> or <strong>Ask Full RAG</strong>.
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Cost Spike Panel (Story 7 Demo 14) -->
-          <div id="cost-spike-wrapper" style="display: none; margin-bottom: 24px;">
-            <div class="lab-panel" style="background: #FFFBEB; border: 2px solid #F59E0B;">
+          <!-- TAB 2: Strategy Comparison Matrix -->
+          <div id="tab-comparison" class="tab-content-panel" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h2 class="lab-panel-title" style="margin: 0;">
+                <span>⚖️</span> Side-by-Side Strategy Comparison
+              </h2>
+              <div class="badge badge-teal">
+                Default: Retrieval Only (Quota Preserved)
+              </div>
+            </div>
+
+            <!-- Comparative Legend & Scoring Explanation -->
+            <div style="background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 6px; padding: 12px 16px; margin-bottom: 18px; font-size: 0.75rem; color: var(--color-navy); line-height: 1.5;">
+              <strong>💡 Scoring Model Distinction:</strong>
+              <div style="margin-top: 4px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                <div><span style="color: #158D89; font-weight: 800;">Cosine Similarity (0.0 to 1.0):</span> Normalized dot product of 768-D dense vectors in semantic latent space.</div>
+                <div><span style="color: #2B4C7E; font-weight: 800;">Okapi BM25 Score (&gt;0, unbounded):</span> Term-frequency / inverse document frequency on exact lexical tokens.</div>
+                <div><span style="color: #B45309; font-weight: 800;">Hybrid RRF Score (0 to ~0.033):</span> Reciprocal Rank Fusion &sum; 1/(60 + rank<sub>m</sub>), combining relative rank orders.</div>
+              </div>
+            </div>
+
+            <div id="comparison-results-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+              <div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--color-text-muted);">
+                Click <strong>⚖️ Compare Methods (Vector vs BM25 vs Hybrid)</strong> to evaluate the current question across all three retrieval approaches simultaneously.
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 3: Educational Embedding Explorer -->
+          <div id="tab-embedding" class="tab-content-panel" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h2 class="lab-panel-title" style="margin: 0;">
+                <span>🧬</span> Educational Embedding Explorer
+              </h2>
+              <div id="embedding-provenance-tag" class="badge badge-teal">
+                Model: gemini-embedding-001 (768-D)
+              </div>
+            </div>
+
+            <!-- Pipeline Diagram -->
+            <div style="background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+              <div style="font-size: 0.8125rem; font-weight: 800; color: var(--color-navy); margin-bottom: 10px;">
+                📐 High-Dimensional Vector Transformation Pipeline
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr auto 1fr auto 1.2fr auto 1fr; gap: 8px; align-items: center;">
+                <div class="flow-step-box">
+                  <div style="font-size: 1.1rem; margin-bottom: 4px;">📄</div>
+                  <div>Document Dossier</div>
+                  <div style="font-size: 0.6875rem; color: var(--color-text-muted); margin-top: 2px;">Markdown Text</div>
+                </div>
+                <div class="flow-arrow">➔</div>
+                <div class="flow-step-box">
+                  <div style="font-size: 1.1rem; margin-bottom: 4px;">✂️</div>
+                  <div>Text Chunk</div>
+                  <div style="font-size: 0.6875rem; color: var(--color-text-muted); margin-top: 2px;">~450 chars</div>
+                </div>
+                <div class="flow-arrow">➔</div>
+                <div class="flow-step-box" style="border-color: var(--color-teal); background: #F0FDFA;">
+                  <div style="font-size: 1.1rem; margin-bottom: 4px;">🧠</div>
+                  <div>gemini-embedding-001</div>
+                  <div style="font-size: 0.6875rem; color: #0F766E; margin-top: 2px;">768-D Dense Embedder</div>
+                </div>
+                <div class="flow-arrow">➔</div>
+                <div class="flow-step-box">
+                  <div style="font-size: 1.1rem; margin-bottom: 4px;">🔍</div>
+                  <div>Cosine Search</div>
+                  <div style="font-size: 0.6875rem; color: var(--color-text-muted); margin-top: 2px;">Unit Dot Product</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Vector Inspection Box -->
+            <div class="lab-panel" style="background: #FFFFFF; border: 1px solid var(--color-border); margin-bottom: 20px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <h3 style="font-size: 1rem; font-weight: 800; color: #92400E; margin: 0;">
-                  📈 Story 7: "Arthur Receives the Bill" — Usage Spike vs Budget Protection
+                <h3 style="font-size: 0.9375rem; font-weight: 800; color: var(--color-navy); margin: 0;">
+                  Live Query Vector Telemetry
                 </h3>
-                <span class="badge badge-gold" id="cost-spike-badge">Simulation Complete</span>
+                <button id="btn-refresh-vector" class="btn btn-outline" style="font-size: 0.6875rem; padding: 4px 10px;">
+                  🔄 Inspect Active Query Vector
+                </button>
               </div>
-              <div id="cost-spike-container"></div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 14px;">
+                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 10px;">
+                  <div style="font-size: 0.6875rem; color: var(--color-text-muted); text-transform: uppercase;">Vector Dimensions</div>
+                  <div id="emb-dims-val" style="font-size: 1.125rem; font-weight: 800; color: var(--color-navy); margin-top: 2px;">768 floats</div>
+                </div>
+                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 10px;">
+                  <div style="font-size: 0.6875rem; color: var(--color-text-muted); text-transform: uppercase;">Vector L2 Norm (||v||)</div>
+                  <div id="emb-norm-val" style="font-size: 1.125rem; font-weight: 800; color: var(--color-teal); margin-top: 2px;">1.000000</div>
+                </div>
+                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 10px;">
+                  <div style="font-size: 0.6875rem; color: var(--color-text-muted); text-transform: uppercase;">Provenance Mode</div>
+                  <div id="emb-mode-val" style="font-size: 0.8125rem; font-weight: 800; color: #B45309; margin-top: 4px;">Cached Golden Vector</div>
+                </div>
+              </div>
+
+              <!-- Numerical Vector Value Chips -->
+              <div style="font-size: 0.8125rem; font-weight: 700; color: var(--color-navy); margin-bottom: 6px;">
+                Numerical Vector Sample (First 16 of 768 float dimensions):
+              </div>
+              <div id="emb-vector-samples-grid" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
+                <span class="vector-chip">d0: 0.000000</span>
+                <span class="vector-chip">d1: 0.000000</span>
+                <span class="vector-chip">d2: 0.000000</span>
+                <span class="vector-chip">d3: 0.000000</span>
+                <span class="vector-chip">d4: 0.000000</span>
+                <span class="vector-chip">d5: 0.000000</span>
+                <span class="vector-chip">d6: 0.000000</span>
+                <span class="vector-chip">d7: 0.119570</span>
+              </div>
+            </div>
+
+            <!-- Educational Callout: Why Exact SKUs Drift -->
+            <div style="background: #FFFBEB; border: 1px solid #FCD34D; border-radius: 8px; padding: 16px;">
+              <div style="display: flex; align-items: center; gap: 8px; font-weight: 800; color: #92400E; margin-bottom: 8px; font-size: 0.9375rem;">
+                <span>⚠️</span> Why Exact SKUs Fail with Dense Vector Retrieval
+              </div>
+              <div style="font-size: 0.8125rem; color: #78350F; line-height: 1.6;">
+                <p style="margin: 0 0 8px 0;">
+                  Dense vector models (like Gemini) use <strong>subword tokenizers</strong> (Byte-Pair Encoding). An arbitrary SKU code such as <code>QQ-0015</code> is fragmented into meaningless sub-tokens like <code>["QQ", "-", "00", "15"]</code>.
+                </p>
+                <p style="margin: 0 0 8px 0;">
+                  In 768-dimensional semantic latent space, these fragments project close to general digits, year dates, or generic physics tokens rather than clustering specifically on product <code>QQ-0015</code>. Dense cosine similarity measures <em>semantic topicality</em> rather than <em>exact symbol equality</em>.
+                </p>
+                <p style="margin: 0;">
+                  <strong>The Engineering Fix:</strong> Okapi BM25 builds an inverted index over whole tokens. The rare exact token <code>qq-0015</code> receives an extraordinarily high Inverse Document Frequency (IDF) weight, guaranteeing #1 ranking. Hybrid RRF combines both worlds.
+                </p>
+              </div>
             </div>
           </div>
 
-          <!-- Comparison Panel (Gate 4 & 5) -->
-          <div id="comparison-card-wrapper" style="display: none; margin-bottom: 24px;">
-            <div class="lab-panel" style="background: #F8FAFC; border: 2px solid var(--color-teal);">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <h3 style="font-size: 1rem; font-weight: 800; color: var(--color-navy); margin: 0;">
-                  ⚖️ Side-by-Side Strategy Comparison
-                </h3>
-                <span class="badge badge-teal">Vector vs BM25 vs Hybrid (RRF)</span>
+          <!-- TAB 4: Chunking Lab Inspector -->
+          <div id="tab-chunking" class="tab-content-panel" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h2 class="lab-panel-title" style="margin: 0;">
+                <span>📑</span> Interactive Chunking Lab Inspector
+              </h2>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <label for="chunk-sample-doc-select" style="font-size: 0.75rem; font-weight: 700; color: var(--color-navy);">Sample Document:</label>
+                <select id="chunk-sample-doc-select" class="form-select" style="font-size: 0.75rem; padding: 4px 8px; width: auto;">
+                  <option value="QQ-0011">QQ-0011: Atomic Orbit Desk Lamp</option>
+                  <option value="QQ-0015">QQ-0015: Precision Mirror Galvanometer</option>
+                  <option value="QQ-0074">QQ-0074: Atomic Orbit Wireless Charger</option>
+                  <option value="QQ-0049">QQ-0049: Digital Astronomy Star Projector</option>
+                </select>
               </div>
-              <div id="comparison-results-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;"></div>
+            </div>
+
+            <!-- Strategy Cards Overview -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px;">
+              <div style="background: #FFFFFF; border: 2px solid var(--color-teal); border-radius: 8px; padding: 14px;">
+                <div style="font-weight: 800; font-size: 0.875rem; color: var(--color-teal); margin-bottom: 6px;">
+                  1. Structural / Heading-Based
+                </div>
+                <div style="font-size: 0.75rem; color: var(--color-text-muted); line-height: 1.4; margin-bottom: 8px;">
+                  Splits along Markdown H1/H2 boundaries. Preserves complete topical cohesion, specifications, and sentences.
+                </div>
+                <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-navy);">
+                  Corpus chunks: <span class="badge badge-teal">1,623 chunks</span>
+                </div>
+              </div>
+
+              <div style="background: #FFFFFF; border: 2px solid #2B4C7E; border-radius: 8px; padding: 14px;">
+                <div style="font-weight: 800; font-size: 0.875rem; color: #2B4C7E; margin-bottom: 6px;">
+                  2. Fixed-Size Word-Bounded
+                </div>
+                <div style="font-size: 0.75rem; color: var(--color-text-muted); line-height: 1.4; margin-bottom: 8px;">
+                  Splits at strict 450-character window borders. Uniform chunk sizes, but truncates context across borders.
+                </div>
+                <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-navy);">
+                  Corpus chunks: <span class="badge badge-navy">1,181 chunks</span>
+                </div>
+              </div>
+
+              <div style="background: #FFFFFF; border: 2px solid #B45309; border-radius: 8px; padding: 14px;">
+                <div style="font-weight: 800; font-size: 0.875rem; color: #B45309; margin-bottom: 6px;">
+                  3. Sliding-Window Overlap
+                </div>
+                <div style="font-size: 0.75rem; color: var(--color-text-muted); line-height: 1.4; margin-bottom: 8px;">
+                  450 chars with 150-char overlap. Carries context over boundaries; introduces 28% data redundancy.
+                </div>
+                <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-navy);">
+                  Corpus chunks: <span class="badge badge-gold">1,512 chunks</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chunk Boundaries Viewer -->
+            <div id="chunk-boundaries-display">
+              <div style="padding: 30px; text-align: center; color: var(--color-text-muted);">
+                Loading chunk slices for selected document...
+              </div>
             </div>
           </div>
 
-          <!-- Graph Path Visualizer (Gate 6 & 7) -->
-          <div id="graph-path-wrapper" style="display: none; margin-bottom: 24px;">
-            <div class="lab-panel" style="background: #FEF3C7; border: 2px solid #D97706;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <h3 style="font-size: 1rem; font-weight: 800; color: #92400E; margin: 0;">
-                  🕸️ Multi-Hop Knowledge Graph Traversal
-                </h3>
-                <span class="badge badge-gold" id="graph-path-badge">Root Cause Resolved</span>
-              </div>
-              <div id="graph-path-container" style="background: #FFFFFF; border-radius: 6px; padding: 16px; border: 1px solid #FCD34D;"></div>
+          <!-- TAB 5: OKF & Knowledge Graph Explorer -->
+          <div id="tab-okf" class="tab-content-panel" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h2 class="lab-panel-title" style="margin: 0;">
+                <span>🕸️</span> Open Knowledge Format (OKF) &amp; Graph Explorer
+              </h2>
+              <span class="badge badge-gold">OKF Spec v1.0.0 Validated</span>
             </div>
-          </div>
 
-          <!-- Evidence List -->
-          <div>
-            <h3 style="font-size: 0.9375rem; font-weight: 800; color: var(--color-navy); margin-bottom: 12px; display: flex; justify-content: space-between;">
-              <span>Retrieved Context Chunks</span>
-              <span id="evidence-count-label" style="font-weight: 600; color: var(--color-text-muted); font-size: 0.8125rem;">0 chunks</span>
-            </h3>
-            <div id="evidence-results-list">
-              <div style="padding: 40px; text-align: center; color: var(--color-text-muted); font-size: 0.875rem;">
-                Select a curated test question or type a query, then click <strong>Retrieve Only</strong> or <strong>Ask Full RAG</strong>.
+            <!-- OKF Bundle Overview -->
+            <div style="background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 8px; padding: 14px; margin-bottom: 18px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <div style="font-size: 0.8125rem; font-weight: 800; color: var(--color-navy);">
+                  📁 Portable Knowledge Bundle: <code>quirk-and-quanta-defect-graph</code>
+                </div>
+                <a href="/data/okf/manifest.json" target="_blank" class="citation-pill">View manifest.json</a>
+              </div>
+              <div style="font-size: 0.75rem; color: var(--color-text-muted); line-height: 1.4;">
+                Conformant with Google Cloud Knowledge Catalog Open Knowledge Format (OKF). Serialized into <code>manifest.json</code>, <code>entities.jsonl</code> (6 entities), and <code>relations.jsonl</code> (8 relations).
               </div>
             </div>
+
+            <!-- Interactive Graph Path Explorer -->
+            <div style="background: #FEF3C7; border: 2px solid #D97706; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+              <div style="font-size: 0.875rem; font-weight: 800; color: #92400E; margin-bottom: 12px; display: flex; justify-content: space-between;">
+                <span>Interactive Traversal: 3 Products ➔ 1 Shared Component ➔ 1 Active Recall Notice</span>
+                <span style="font-size: 0.75rem; font-weight: 600;">Click any node to view entity properties</span>
+              </div>
+
+              <!-- Interactive Node Flow -->
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                  <button class="graph-node-card active" data-entity="QQ-0011">
+                    <span style="font-size: 1rem;">💡</span> <strong>QQ-0011</strong><br>
+                    <span style="font-size: 0.6875rem; color: var(--color-text-muted);">Atomic Orbit Desk Lamp</span>
+                  </button>
+                  <button class="graph-node-card" data-entity="QQ-0074">
+                    <span style="font-size: 1rem;">🔋</span> <strong>QQ-0074</strong><br>
+                    <span style="font-size: 0.6875rem; color: var(--color-text-muted);">Atomic Wireless Charger</span>
+                  </button>
+                  <button class="graph-node-card" data-entity="QQ-0049">
+                    <span style="font-size: 1rem;">✨</span> <strong>QQ-0049</strong><br>
+                    <span style="font-size: 0.6875rem; color: var(--color-text-muted);">Digital Star Projector</span>
+                  </button>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px; margin-left: 20px;">
+                  <span style="color: #D97706; font-weight: 900; font-size: 1rem;">➔ [CONTAINS] ➔</span>
+                  <button class="graph-node-card" data-entity="COMP-025" style="border-color: #059669; background: #ECFDF5;">
+                    <span style="font-size: 1rem;">⚙️</span> <strong>COMP-025</strong><br>
+                    <span style="font-size: 0.6875rem; color: #065F46;">Voltage Regulator IC (5V/3A)</span>
+                  </button>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px; margin-left: 40px;">
+                  <span style="color: #DC2626; font-weight: 900; font-size: 1rem;">➔ [AFFECTED_BY] ➔</span>
+                  <button class="graph-node-card" data-entity="REC-VREG-01" style="border-color: #DC2626; background: #FEF2F2;">
+                    <span style="font-size: 1rem;">🚨</span> <strong>REC-VREG-01</strong><br>
+                    <span style="font-size: 0.6875rem; color: #991B1B;">Thermal Breakdown Recall</span>
+                  </button>
+                  
+                  <span style="color: #6B7280; font-weight: 900; font-size: 1rem; margin-left: 10px;">➔ [SUPPLIED_BY] ➔</span>
+                  <button class="graph-node-card" data-entity="SUP-008" style="border-color: #6B7280; background: #F3F4F6;">
+                    <span style="font-size: 1rem;">🏭</span> <strong>SUP-008</strong><br>
+                    <span style="font-size: 0.6875rem; color: #374151;">Quantum Flux Micro</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Selected Node Detail Card -->
+            <div id="node-detail-card" style="background: #FFFFFF; border: 1px solid var(--color-border); border-radius: 8px; padding: 18px; margin-bottom: 20px;">
+              <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase;">
+                Selected Entity Properties
+              </div>
+              <div id="node-detail-content" style="margin-top: 8px;">
+                <h3 style="font-size: 1.125rem; font-weight: 800; color: var(--color-navy); margin-bottom: 4px;">
+                  QQ-0011: Atomic Orbit Desk Lamp
+                </h3>
+                <div style="font-size: 0.8125rem; color: var(--color-text-main); line-height: 1.6;">
+                  Category: Desk &amp; Office &bull; Price: ₹129.99 &bull; Rating: 4.7 &bull; In Stock: Yes<br>
+                  Bill of Materials: Contains <strong>COMP-025</strong> (5V LED Driver Step-Down Regulator, Batch: BATCH-VREG-2026).
+                </div>
+              </div>
+            </div>
+
+            <!-- Architectural Taxonomy Table -->
+            <div style="background: #F8FAFC; border: 1px solid var(--color-border); border-radius: 8px; padding: 16px;">
+              <h4 style="font-size: 0.875rem; font-weight: 800; color: var(--color-navy); margin-bottom: 8px;">
+                🏛️ Graph Architecture Taxonomy: OKF vs Local GraphRAG vs Neo4j AuraDB
+              </h4>
+              <div style="overflow-x: auto;">
+                <table style="width: 100%; font-size: 0.75rem; border-collapse: collapse; text-align: left;">
+                  <thead>
+                    <tr style="border-bottom: 2px solid var(--color-border); color: var(--color-navy);">
+                      <th style="padding: 6px 8px;">System Dimension</th>
+                      <th style="padding: 6px 8px;">Open Knowledge Format (OKF)</th>
+                      <th style="padding: 6px 8px;">Local GraphRAG</th>
+                      <th style="padding: 6px 8px;">Neo4j AuraDB</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style="border-bottom: 1px solid var(--color-border);">
+                      <td style="padding: 6px 8px; font-weight: 700;">Role</td>
+                      <td style="padding: 6px 8px;">Portable Data Interchange Standard</td>
+                      <td style="padding: 6px 8px;">Embedded Python Traversal Engine</td>
+                      <td style="padding: 6px 8px;">Enterprise Cloud Graph Database</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--color-border);">
+                      <td style="padding: 6px 8px; font-weight: 700;">Format / Engine</td>
+                      <td style="padding: 6px 8px;">JSONL Schemas &amp; Manifest</td>
+                      <td style="padding: 6px 8px;">In-memory Adjacency BFS</td>
+                      <td style="padding: 6px 8px;">Cypher Query Engine (Transactional REST)</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--color-border);">
+                      <td style="padding: 6px 8px; font-weight: 700;">Latency</td>
+                      <td style="padding: 6px 8px;">N/A (Storage format)</td>
+                      <td style="padding: 6px 8px;">&lt; 0.1 ms (Deterministic)</td>
+                      <td style="padding: 6px 8px;">15 - 45 ms (Network roundtrip)</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 6px 8px; font-weight: 700;">Current Status</td>
+                      <td style="padding: 6px 8px;"><span class="badge badge-teal">VALIDATED (data/okf/)</span></td>
+                      <td style="padding: 6px 8px;"><span class="badge badge-teal">ACTIVE (1,206 edges)</span></td>
+                      <td style="padding: 6px 8px;"><span class="badge badge-gold">NOT CONNECTED (Offline Fallback)</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
 
         </section>
@@ -517,7 +1039,7 @@
           &copy; 2026 Quirk &amp; Quanta. "Beyond Basic RAG" Workshop Masterclass.
         </div>
         <div style="font-size: 0.75rem; color: var(--color-text-light);">
-          Gate 2 Exploration Bench &bull; Vanilla RAG Engine &bull; Zero External Dependencies
+          Interactive RAG Strategy Playground &bull; Multi-Strategy Retrieval &bull; Zero External Dependencies
         </div>
       </div>
     </div>
@@ -554,21 +1076,6 @@
       </div>
       <div class="modal-body">
         <p>Purchasing is disabled. Quirk &amp; Quanta exists solely as the multi-domain knowledge base for RAG workshops.</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-primary close-modal-trigger">Understood</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="role-explainer-modal">
-    <div class="modal-container">
-      <div class="modal-header">
-        <h3 class="modal-title">Role Preview Demonstration Architecture</h3>
-        <button class="modal-close-btn" aria-label="Close modal">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p>In Gate 2, Role-Based Access Control filters out internal confidential procurement records for the Customer role before vector similarity retrieval occurs.</p>
       </div>
       <div class="modal-footer">
         <button class="btn btn-primary close-modal-trigger">Understood</button>

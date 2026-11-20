@@ -167,11 +167,14 @@ class Neo4jGraphAdapter:
         }
 
     def get_telemetry(self) -> Dict[str, Any]:
+        is_conf = self.is_configured()
         return {
-            "configured": self.is_configured(),
+            "configured": is_conf,
+            "status": "connected" if is_conf else "not_connected",
+            "badge": "🟢 Neo4j AuraDB: Connected" if is_conf else "⚠️ Neo4j AuraDB: Not Connected (In-Memory Cypher Fallback)",
             "uri": self.uri if self.uri else None,
             "database": self.database,
-            "engine": "Neo4j AuraDB" if self.is_configured() else "Neo4j AuraDB (Offline Reference Mode)",
+            "engine": "Neo4j AuraDB" if is_conf else "Neo4j AuraDB (Offline Reference Mode)",
             "localNodesAvailable": len(self._local_graph.nodes)
         }
 
