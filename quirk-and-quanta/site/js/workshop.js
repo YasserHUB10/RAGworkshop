@@ -231,10 +231,16 @@ function setupControls() {
   if (btnToken) {
     btnToken.addEventListener('click', async () => {
       try {
-        const res = await fetch('/api/rag/auth/demo-token');
+        const presenterToken = localStorage.getItem('presenter_token') || prompt('Presenter Authentication: Enter Presenter Key to mint privileged session token:');
+        if (!presenterToken) return;
+
+        const res = await fetch('/api/rag/auth/demo-token', {
+          headers: { 'X-Presenter-Token': presenterToken }
+        });
         if (res.ok) {
           const data = await res.json();
           activeAuthToken = data.token;
+          localStorage.setItem('presenter_token', presenterToken);
           if (tokenLabel) {
             tokenLabel.textContent = `🟢 Signed Bearer Token Active (${data.userId})`;
             tokenLabel.style.color = '#059669';
@@ -243,6 +249,8 @@ function setupControls() {
           const roleSelect = document.getElementById('role-select');
           if (roleSelect) roleSelect.value = 'admin';
           alert('Issued valid HMAC-SHA256 bearer token for Administrator (dr_arthur)!');
+        } else {
+          alert('Access Denied (403 Forbidden): Public users cannot mint privileged HMAC sessions. Valid Presenter Key required.');
         }
       } catch (e) {
         console.error('Failed to get token:', e);

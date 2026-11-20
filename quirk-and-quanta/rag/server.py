@@ -34,7 +34,7 @@ if ROOT_DIR not in sys.path:
 from rag.pipeline import RAGPipeline
 from rag.graph_local import get_graph
 from rag.graph_neo4j import get_neo4j_adapter
-from rag.auth import create_signed_token, resolve_effective_role, check_resource_access
+from rag.auth import create_signed_token, resolve_effective_role, check_resource_access, verify_token
 
 pipeline = RAGPipeline(default_strategy="semantic")
 graph = get_graph()
@@ -139,14 +139,26 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         elif path == "/api/rag/auth/demo-token":
-            # Issues authentic demo admin session token for workshop presenters
+            # Public Access Security Gate: Public users cannot mint privileged HMAC sessions.
+            # Only authenticated presenters with the Secret Manager PRESENTER_TOKEN may mint privileged tokens.
+            presenter_header = self.headers.get("X-Presenter-Token", "").strip()
+            presenter_secret = os.environ.get("PRESENTER_TOKEN", "").strip()
+
+            if not presenter_secret or not presenter_header or not hmac.compare_digest(presenter_header, presenter_secret):
+                self._send_json({
+                    "error": "Forbidden",
+                    "status": 403,
+                    "message": "Public users cannot mint privileged HMAC sessions. Valid X-Presenter-Token required."
+                }, status=403)
+                return
+
             token = create_signed_token(role="admin", user_id="dr_arthur")
             self._send_json({
                 "role": "admin",
                 "userId": "dr_arthur",
                 "token": token,
                 "type": "Bearer",
-                "note": "Use in Authorization header 'Bearer <token>' or authToken parameter to authenticate as Admin."
+                "note": "Privileged Admin HMAC session token minted for authorized presenter."
             })
             return
 
@@ -200,17 +212,19 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         api_key = os.environ.get("GEMINI_API_KEY")
 
         # Resolve effective role at the server HTTP boundary
+        # STRICT: Server HTTP boundary enforces hardened=True on role checks so clients cannot bypass RBAC!
         effective_role, was_tampered, auth_msg = resolve_effective_role(
             requested_role=role,
             auth_token=auth_token,
-            hardened=hardened
+            hardened=True
         )
 
         # Presenter Priority Detection:
-        # 1. Cryptographically signed bearer token with role "presenter" or "admin"
-        # 2. Or explicit environment secret PRESENTER_TOKEN (strictly non-empty, no hardcoded default)
+        # 1. Cryptographically verified bearer token with role "presenter" or "admin"
+        # 2. Or explicit Secret Manager environment secret PRESENTER_TOKEN (strictly non-empty, matching X-Presenter-Token)
         is_presenter = False
-        if effective_role in ["presenter", "admin"]:
+        verified_token = verify_token(auth_token)
+        if verified_token and verified_token.get("role") in ["presenter", "admin"]:
             is_presenter = True
         else:
             presenter_header = self.headers.get("X-Presenter-Token", "").strip()
@@ -314,24 +328,30 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self._send_json({"error": "Field 'docId' is required"}, status=400)
                 return
 
+            # Directory traversal prevention: Reject path separators or relative segments immediately
+            if "/" in doc_id or "\\" in doc_id or ".." in doc_id:
+                self._send_json({"error": "Forbidden", "status": 403, "message": "Directory traversal syntax in docId is prohibited."}, status=403)
+                return
+
             # Determine resource classification
-            is_internal = "PROC" in doc_id or "INTERNAL" in doc_id
+            clean_doc_id = os.path.basename(doc_id).replace("..", "").strip()
+            is_internal = any(k in doc_id.upper() for k in ["PROC", "INTERNAL", "SUPPLIER", "CONTRACT", "MARGIN", "PRIVATE", "CONFIDENTIAL"])
             access_level = "internal_procurement" if is_internal else "public"
 
             effective_role, was_tampered, auth_msg = resolve_effective_role(
                 requested_role=role,
                 auth_token=auth_token,
-                hardened=hardened
+                hardened=True  # STRICT: IDOR endpoint always enforces cryptographic token verification!
             )
 
             # Check access
-            allowed, access_msg = check_resource_access(doc_id, effective_role, access_level)
+            allowed, access_msg = check_resource_access(clean_doc_id, effective_role, access_level)
 
             if not allowed:
                 self._send_json({
                     "error": "Forbidden",
                     "status": 403,
-                    "docId": doc_id,
+                    "docId": clean_doc_id,
                     "accessLevel": access_level,
                     "requestedRole": role,
                     "effectiveRole": effective_role,
@@ -340,13 +360,20 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 }, status=403)
                 return
 
-            # If allowed, fetch document text from corpus
-            doc_path = os.path.join(CORPUS_DIR, f"{doc_id}.json")
+            # If allowed, fetch document text from corpus safely
+            doc_path = os.path.join(CORPUS_DIR, f"{clean_doc_id}.json")
             if not os.path.exists(doc_path):
                 # Check with prefix DOC-
-                alt_path = os.path.join(CORPUS_DIR, f"DOC-{doc_id}.json")
+                alt_path = os.path.join(CORPUS_DIR, f"DOC-{clean_doc_id}.json")
                 if os.path.exists(alt_path):
                     doc_path = alt_path
+
+            # Strict path containment check
+            norm_doc = os.path.realpath(doc_path)
+            norm_corpus = os.path.realpath(CORPUS_DIR)
+            if not (norm_doc == norm_corpus or norm_doc.startswith(norm_corpus + os.sep)):
+                self._send_json({"error": "Forbidden", "status": 403, "message": "Invalid document path traversal"}, status=403)
+                return
 
             doc_content = None
             if os.path.exists(doc_path):

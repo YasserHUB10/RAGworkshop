@@ -38,6 +38,8 @@ class GuardrailsEngine:
         self.session_tokens: Dict[str, int] = {}
         self.max_requests_per_minute = 30
         self.max_tokens_per_session = 15000
+        self.global_tokens_total = 0
+        self.max_global_tokens = 500000  # Hard global ceiling safeguarding Gemini API budget
         self.lock = threading.Lock()
 
     def check_direct_injection(self, query: str) -> Tuple[bool, Optional[str]]:
@@ -107,10 +109,15 @@ class GuardrailsEngine:
 
     def check_usage_budget(self, session_id: str = "default_session", estimated_tokens: int = 150) -> Tuple[bool, Optional[str]]:
         """
-        Enforces per-session rate limits and token budgets to prevent cost spikes (Story 7).
+        Enforces per-session rate limits and token budgets to prevent cost spikes (Story 7),
+        as well as global hard spending safeguards.
         """
         now = time.time()
         with self.lock:
+            # 1. Global spending safeguard invariant
+            if self.global_tokens_total + estimated_tokens > self.max_global_tokens:
+                return False, f"Global service spending safeguard reached: Max cumulative tokens ({self.max_global_tokens}) exceeded."
+
             if session_id not in self.session_usage:
                 self.session_usage[session_id] = []
                 self.session_tokens[session_id] = 0
@@ -126,15 +133,21 @@ class GuardrailsEngine:
 
             self.session_usage[session_id].append(now)
             self.session_tokens[session_id] += estimated_tokens
+            self.global_tokens_total += estimated_tokens
             return True, None
 
     def check_presenter_budget(self, session_id: str = "presenter_session", estimated_tokens: int = 150) -> Tuple[bool, Optional[str]]:
         """
         Enforces a dedicated priority pool for presenter requests (60 req/min, 60,000 tokens).
-        Isolates presenter demonstrations from attendee traffic while preventing unbounded runaway billing loops.
+        Isolates presenter demonstrations from attendee traffic while preventing unbounded runaway billing loops,
+        strictly maintaining global spending safeguards.
         """
         now = time.time()
         with self.lock:
+            # 1. Global spending safeguard invariant (Presenter bypass CANNOT disable global safeguards)
+            if self.global_tokens_total + estimated_tokens > self.max_global_tokens:
+                return False, f"Global service spending safeguard reached: Max cumulative tokens ({self.max_global_tokens}) exceeded."
+
             key = f"presenter_{session_id}"
             if key not in self.session_usage:
                 self.session_usage[key] = []
@@ -153,6 +166,7 @@ class GuardrailsEngine:
 
             self.session_usage[key].append(now)
             self.session_tokens[key] += estimated_tokens
+            self.global_tokens_total += estimated_tokens
             return True, None
 
     def evaluate_request(
