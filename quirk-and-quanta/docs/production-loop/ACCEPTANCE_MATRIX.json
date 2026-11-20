@@ -40,37 +40,37 @@
       "name": "Secrets Managed Securely",
       "description": "No API keys in Git or client JavaScript; runtime secrets managed securely; audit logging clean.",
       "status": "GREEN",
-      "verified_commit": "pending-iter-04"
+      "verified_commit": "c174863"
     },
     "P07": {
       "name": "Backend Authentication & RBAC Hardened",
       "description": "Server HTTP boundary enforces HMAC-SHA256 signature verification; client role tampering demoted.",
       "status": "GREEN",
-      "verified_commit": "pending-iter-04"
+      "verified_commit": "c174863"
     },
     "P08": {
       "name": "No Publicly Exploitable Demonstration Endpoints",
       "description": "Intentionally vulnerable demo modes safely isolated; public endpoints cannot disable server authorization.",
       "status": "GREEN",
-      "verified_commit": "pending-iter-04"
+      "verified_commit": "c174863"
     },
     "P09": {
       "name": "Genuine Live Gemini Inference Verified",
       "description": "Gemini 2.5 Flash and gemini-embedding-001 verified with quota bounds and deterministic offline fallback.",
-      "status": "PENDING",
-      "verified_commit": null
+      "status": "GREEN",
+      "verified_commit": "pending-iter-05"
     },
     "P10": {
       "name": "Vector, BM25, Hybrid & Local Graph Working",
       "description": "All 4 retrieval strategies operate with verified accuracy and truthful metric attribution.",
-      "status": "PENDING",
-      "verified_commit": null
+      "status": "GREEN",
+      "verified_commit": "pending-iter-05"
     },
     "P11": {
       "name": "Golden Evaluation Behavior Verified",
       "description": "42-case golden evaluation dataset reproducible across retrieval strategies.",
-      "status": "PENDING",
-      "verified_commit": null
+      "status": "GREEN",
+      "verified_commit": "pending-iter-05"
     },
     "P12": {
       "name": "All 17 Demos Reviewed on Hosted Interface",
@@ -104,7 +104,7 @@
     }
   },
   "optional_gates": {
-    "O01": { "name": "Neo4j AuraDB Live Connection", "status": "PENDING" },
+    "O01": { "name": "Neo4j AuraDB Live Connection", "status": "GREEN_WITH_OFFLINE_FALLBACK" },
     "O02": { "name": "Attendee AI Studio Deployment Tested", "status": "PENDING" },
     "O03": { "name": "Attendee Vercel Deployment Tested", "status": "PENDING" },
     "O04": { "name": "Advanced Monitoring Dashboards", "status": "PENDING" },

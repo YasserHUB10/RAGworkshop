@@ -1,5 +1,5 @@
 {
-  "benchmarkDate": "2026-11-20 14:18:27 UTC",
+  "benchmarkDate": "2026-11-20 15:12:39 UTC",
   "datasetVersion": "2.0 (42 cases)",
   "strategy": "semantic",
   "method": "hybrid",
@@ -10,9 +10,9 @@
     "meanReciprocalRank": 0.4841,
     "meanPrecisionAtK": 0.2048,
     "meanRecallAtK": 0.3917,
-    "latencyP50Ms": 56.82,
-    "latencyP95Ms": 75.58,
-    "latencyAvgMs": 60.02,
+    "latencyP50Ms": 22.32,
+    "latencyP95Ms": 24.49,
+    "latencyAvgMs": 22.69,
     "rbacCompliance": "100%"
   },
   "testCases": [
@@ -26,7 +26,7 @@
       "precisionAtK": 0.2,
       "recallAtK": 1.0,
       "topScore": 0.032787,
-      "latencyMs": 148.61
+      "latencyMs": 24.49
     },
     {
       "id": "EVAL-002",
@@ -38,7 +38,7 @@
       "precisionAtK": 0.2,
       "recallAtK": 1.0,
       "topScore": 0.032787,
-      "latencyMs": 56.63
+      "latencyMs": 22.63
     },
     {
       "id": "EVAL-003",
@@ -50,7 +50,7 @@
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
       "topScore": 0.028958,
-      "latencyMs": 56.4
+      "latencyMs": 22.95
     },
     {
       "id": "EVAL-004",
@@ -62,7 +62,7 @@
       "precisionAtK": 0.2,
       "recallAtK": 1.0,
       "topScore": 0.032787,
-      "latencyMs": 56.25
+      "latencyMs": 22.29
     },
     {
       "id": "EVAL-005",
@@ -74,7 +74,7 @@
       "precisionAtK": 0.2,
       "recallAtK": 1.0,
       "topScore": 0.032787,
-      "latencyMs": 56.97
+      "latencyMs": 22.13
     },
     {
       "id": "EVAL-006",
@@ -86,7 +86,7 @@
       "precisionAtK": 0.2,
       "recallAtK": 1.0,
       "topScore": 0.032787,
-      "latencyMs": 56.36
+      "latencyMs": 23.81
     },
     {
       "id": "EVAL-007",
@@ -98,7 +98,7 @@
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
       "topScore": 0.016393,
-      "latencyMs": 56.07
+      "latencyMs": 22.55
     },
     {
       "id": "EVAL-008",
@@ -110,7 +110,7 @@
       "precisionAtK": 0.4,
       "recallAtK": 0.5,
       "topScore": 0.027619,
-      "latencyMs": 55.93
+      "latencyMs": 22.06
     },
     {
       "id": "EVAL-009",
@@ -122,7 +122,7 @@
       "precisionAtK": 0.2,
       "recallAtK": 0.2,
       "topScore": 0.032787,
-      "latencyMs": 56.09
+      "latencyMs": 22.83
     },
     {
       "id": "EVAL-010",
@@ -134,7 +134,7 @@
       "precisionAtK": 0.2,
       "recallAtK": 0.333,
       "topScore": 0.032787,
-      "latencyMs": 56.73
+      "latencyMs": 22.74
     },
     {
       "id": "EVAL-011",
@@ -146,7 +146,7 @@
       "precisionAtK": 0.4,
       "recallAtK": 0.667,
       "topScore": 0.032522,
-      "latencyMs": 55.64
+      "latencyMs": 22.47
     },
     {
       "id": "EVAL-012",
@@ -158,7 +158,7 @@
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
       "topScore": 0.02904,
-      "latencyMs": 56.38
+      "latencyMs": 22.29
     },
     {
       "id": "EVAL-013",
@@ -170,7 +170,7 @@
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
       "topScore": 0.016393,
-      "latencyMs": 56.56
+      "latencyMs": 22.09
     },
     {
       "id": "EVAL-014",
@@ -182,7 +182,7 @@
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
       "topScore": 0.016393,
-      "latencyMs": 55.63
+      "latencyMs": 22.32
     },
     {
       "id": "EVAL-015",
@@ -194,7 +194,7 @@
       "precisionAtK": 1.0,
       "recallAtK": 1.0,
       "topScore": 0.032787,
-      "latencyMs": 56.04
+      "latencyMs": 23.53
     },
     {
       "id": "EVAL-016",
@@ -206,7 +206,7 @@
       "precisionAtK": 1.0,
       "recallAtK": 1.0,
       "topScore": 0.031545,
-      "latencyMs": 56.67
+      "latencyMs": 22.1
     },
     {
       "id": "EVAL-017",
@@ -218,7 +218,7 @@
       "precisionAtK": 0.2,
       "recallAtK": 1.0,
       "topScore": 0.032522,
-      "latencyMs": 75.58
+      "latencyMs": 29.76
     },
     {
       "id": "EVAL-018",
@@ -230,7 +230,7 @@
       "precisionAtK": 0.2,
       "recallAtK": 1.0,
       "topScore": 0.032787,
-      "latencyMs": 75.72
+      "latencyMs": 28.78
     },
     {
       "id": "EVAL-019",
@@ -242,7 +242,7 @@
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
       "topScore": 0.02895,
-      "latencyMs": 56.62
+      "latencyMs": 22.47
     },
     {
       "id": "EVAL-020",
@@ -254,7 +254,7 @@
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
       "topScore": 0.030536,
-      "latencyMs": 56.57
+      "latencyMs": 21.65
     },
     {
       "id": "EVAL-021",
@@ -266,7 +266,7 @@
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
       "topScore": 0.028083,
-      "latencyMs": 56.56
+      "latencyMs": 22.48
     },
     {
       "id": "EVAL-022",
@@ -278,7 +278,7 @@
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
       "topScore": 0.031319,
-      "latencyMs": 56.88
+      "latencyMs": 22.07
     },
     {
       "id": "EVAL-023",
@@ -290,7 +290,7 @@
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
       "topScore": 0.032522,
-      "latencyMs": 56.64
+      "latencyMs": 21.8
     },
     {
       "id": "EVAL-024",
@@ -302,7 +302,7 @@
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
       "topScore": 0.031545,
-      "latencyMs": 56.89
+      "latencyMs": 22.59
     },
     {
       "id": "EVAL-025",
@@ -314,7 +314,7 @@
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
       "topScore": 0.027799,
-      "latencyMs": 58.35
+      "latencyMs": 21.89
     },
     {
       "id": "EVAL-026",
@@ -326,7 +326,7 @@
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
       "topScore": 0.030798,
-      "latencyMs": 57.14
+      "latencyMs": 22.45
     },
     {
       "id": "EVAL-027",
@@ -338,7 +338,7 @@
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
       "topScore": 0.016393,
-      "latencyMs": 57.62
+      "latencyMs": 22.48
     },
     {
       "id": "EVAL-028",
@@ -350,7 +350,7 @@
       "precisionAtK": 0.2,
       "recallAtK": 0.5,
       "topScore": 0.032787,
-      "latencyMs": 58.27
+      "latencyMs": 22.1
     },
     {
       "id": "EVAL-029",
@@ -362,7 +362,7 @@
       "precisionAtK": 0.2,
       "recallAtK": 0.5,
       "topScore": 0.032787,
-      "latencyMs": 60.8
+      "latencyMs": 23.02
     },
     {
       "id": "EVAL-030",
@@ -374,7 +374,7 @@
       "precisionAtK": 0.2,
       "recallAtK": 0.25,
       "topScore": 0.032787,
-      "latencyMs": 57.35
+      "latencyMs": 21.69
     },
     {
       "id": "EVAL-031",
@@ -386,7 +386,7 @@
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
       "topScore": 0.031514,
-      "latencyMs": 56.81
+      "latencyMs": 22.38
     },
     {
       "id": "EVAL-032",
@@ -398,7 +398,7 @@
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
       "topScore": 0.032522,
-      "latencyMs": 56.42
+      "latencyMs": 22.12
     },
     {
       "id": "EVAL-033",
@@ -410,7 +410,7 @@
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
       "topScore": 0.027273,
-      "latencyMs": 57.66
+      "latencyMs": 22.55
     },
     {
       "id": "EVAL-034",
@@ -422,7 +422,7 @@
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
       "topScore": 0.016393,
-      "latencyMs": 57.69
+      "latencyMs": 21.41
     },
     {
       "id": "EVAL-035",
@@ -434,7 +434,7 @@
       "precisionAtK": 0.2,
       "recallAtK": 1.0,
       "topScore": 0.032787,
-      "latencyMs": 57.79
+      "latencyMs": 22.29
     },
     {
       "id": "EVAL-036",
@@ -446,7 +446,7 @@
       "precisionAtK": 0.2,
       "recallAtK": 0.5,
       "topScore": 0.029727,
-      "latencyMs": 56.89
+      "latencyMs": 21.87
     },
     {
       "id": "EVAL-037",
@@ -458,7 +458,7 @@
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
       "topScore": 0.016393,
-      "latencyMs": 56.58
+      "latencyMs": 21.43
     },
     {
       "id": "EVAL-038",
@@ -470,7 +470,7 @@
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
       "topScore": 0.016393,
-      "latencyMs": 56.94
+      "latencyMs": 21.97
     },
     {
       "id": "EVAL-039",
@@ -482,7 +482,7 @@
       "precisionAtK": 1.0,
       "recallAtK": 1.0,
       "topScore": 0.029762,
-      "latencyMs": 58.01
+      "latencyMs": 22.0
     },
     {
       "id": "EVAL-040",
@@ -494,7 +494,7 @@
       "precisionAtK": 1.0,
       "recallAtK": 1.0,
       "topScore": 0.032522,
-      "latencyMs": 58.28
+      "latencyMs": 22.12
     },
     {
       "id": "EVAL-041",
@@ -506,7 +506,7 @@
       "precisionAtK": 1.0,
       "recallAtK": 1.0,
       "topScore": 0.030366,
-      "latencyMs": 56.95
+      "latencyMs": 22.32
     },
     {
       "id": "EVAL-042",
@@ -518,7 +518,7 @@
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
       "topScore": 0.016393,
-      "latencyMs": 56.82
+      "latencyMs": 21.86
     }
   ]
 }

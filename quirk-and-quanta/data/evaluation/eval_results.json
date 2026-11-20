@@ -1,18 +1,18 @@
 {
-  "benchmarkDate": "2026-11-20 14:42:52 UTC",
+  "benchmarkDate": "2026-11-20 15:12:39 UTC",
   "datasetVersion": "2.0 (42 cases)",
   "strategy": "semantic",
-  "method": "vector",
+  "method": "hybrid",
   "topK": 5,
   "metrics": {
     "totalQuestions": 42,
-    "hitRate": 0.4762,
-    "meanReciprocalRank": 0.4762,
-    "meanPrecisionAtK": 0.1952,
-    "meanRecallAtK": 0.3798,
-    "latencyP50Ms": 22.12,
-    "latencyP95Ms": 28.48,
-    "latencyAvgMs": 22.9,
+    "hitRate": 0.5,
+    "meanReciprocalRank": 0.4841,
+    "meanPrecisionAtK": 0.2048,
+    "meanRecallAtK": 0.3917,
+    "latencyP50Ms": 22.32,
+    "latencyP95Ms": 24.49,
+    "latencyAvgMs": 22.69,
     "rbacCompliance": "100%"
   },
   "testCases": [
@@ -25,8 +25,8 @@
       "reciprocalRank": 1.0,
       "precisionAtK": 0.2,
       "recallAtK": 1.0,
-      "topScore": 0.4302,
-      "latencyMs": 24.21
+      "topScore": 0.032787,
+      "latencyMs": 24.49
     },
     {
       "id": "EVAL-002",
@@ -37,8 +37,8 @@
       "reciprocalRank": 1.0,
       "precisionAtK": 0.2,
       "recallAtK": 1.0,
-      "topScore": 0.3983,
-      "latencyMs": 22.49
+      "topScore": 0.032787,
+      "latencyMs": 22.63
     },
     {
       "id": "EVAL-003",
@@ -49,8 +49,8 @@
       "reciprocalRank": 0.0,
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
-      "topScore": 0.2366,
-      "latencyMs": 21.76
+      "topScore": 0.028958,
+      "latencyMs": 22.95
     },
     {
       "id": "EVAL-004",
@@ -61,8 +61,8 @@
       "reciprocalRank": 1.0,
       "precisionAtK": 0.2,
       "recallAtK": 1.0,
-      "topScore": 0.215,
-      "latencyMs": 22.67
+      "topScore": 0.032787,
+      "latencyMs": 22.29
     },
     {
       "id": "EVAL-005",
@@ -73,8 +73,8 @@
       "reciprocalRank": 1.0,
       "precisionAtK": 0.2,
       "recallAtK": 1.0,
-      "topScore": 0.3444,
-      "latencyMs": 22.57
+      "topScore": 0.032787,
+      "latencyMs": 22.13
     },
     {
       "id": "EVAL-006",
@@ -85,8 +85,8 @@
       "reciprocalRank": 1.0,
       "precisionAtK": 0.2,
       "recallAtK": 1.0,
-      "topScore": 0.3603,
-      "latencyMs": 22.47
+      "topScore": 0.032787,
+      "latencyMs": 23.81
     },
     {
       "id": "EVAL-007",
@@ -97,20 +97,20 @@
       "reciprocalRank": 0.0,
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
-      "topScore": 0.242,
-      "latencyMs": 22.01
+      "topScore": 0.016393,
+      "latencyMs": 22.55
     },
     {
       "id": "EVAL-008",
       "family": "ambiguous_retrieval",
       "question": "What precision tools or organizers do you sell for an engineer's desk?",
       "role": "customer",
-      "hit": false,
-      "reciprocalRank": 0.0,
-      "precisionAtK": 0.0,
-      "recallAtK": 0.0,
-      "topScore": 0.2465,
-      "latencyMs": 28.48
+      "hit": true,
+      "reciprocalRank": 0.3333333333333333,
+      "precisionAtK": 0.4,
+      "recallAtK": 0.5,
+      "topScore": 0.027619,
+      "latencyMs": 22.06
     },
     {
       "id": "EVAL-009",
@@ -121,8 +121,8 @@
       "reciprocalRank": 1.0,
       "precisionAtK": 0.2,
       "recallAtK": 0.2,
-      "topScore": 0.3698,
-      "latencyMs": 27.17
+      "topScore": 0.032787,
+      "latencyMs": 22.83
     },
     {
       "id": "EVAL-010",
@@ -133,8 +133,8 @@
       "reciprocalRank": 1.0,
       "precisionAtK": 0.2,
       "recallAtK": 0.333,
-      "topScore": 0.3048,
-      "latencyMs": 26.21
+      "topScore": 0.032787,
+      "latencyMs": 22.74
     },
     {
       "id": "EVAL-011",
@@ -145,8 +145,8 @@
       "reciprocalRank": 1.0,
       "precisionAtK": 0.4,
       "recallAtK": 0.667,
-      "topScore": 0.3728,
-      "latencyMs": 25.82
+      "topScore": 0.032522,
+      "latencyMs": 22.47
     },
     {
       "id": "EVAL-012",
@@ -157,8 +157,8 @@
       "reciprocalRank": 0.0,
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
-      "topScore": 0.2359,
-      "latencyMs": 22.78
+      "topScore": 0.02904,
+      "latencyMs": 22.29
     },
     {
       "id": "EVAL-013",
@@ -169,8 +169,8 @@
       "reciprocalRank": 0.0,
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
-      "topScore": 0.2346,
-      "latencyMs": 22.82
+      "topScore": 0.016393,
+      "latencyMs": 22.09
     },
     {
       "id": "EVAL-014",
@@ -181,8 +181,8 @@
       "reciprocalRank": 0.0,
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
-      "topScore": 0.2822,
-      "latencyMs": 22.67
+      "topScore": 0.016393,
+      "latencyMs": 22.32
     },
     {
       "id": "EVAL-015",
@@ -193,8 +193,8 @@
       "reciprocalRank": 1.0,
       "precisionAtK": 1.0,
       "recallAtK": 1.0,
-      "topScore": 0.5212,
-      "latencyMs": 21.84
+      "topScore": 0.032787,
+      "latencyMs": 23.53
     },
     {
       "id": "EVAL-016",
@@ -205,8 +205,8 @@
       "reciprocalRank": 1.0,
       "precisionAtK": 1.0,
       "recallAtK": 1.0,
-      "topScore": 0.3452,
-      "latencyMs": 21.94
+      "topScore": 0.031545,
+      "latencyMs": 22.1
     },
     {
       "id": "EVAL-017",
@@ -217,8 +217,8 @@
       "reciprocalRank": 1.0,
       "precisionAtK": 0.2,
       "recallAtK": 1.0,
-      "topScore": 0.4271,
-      "latencyMs": 29.83
+      "topScore": 0.032522,
+      "latencyMs": 29.76
     },
     {
       "id": "EVAL-018",
@@ -229,8 +229,8 @@
       "reciprocalRank": 1.0,
       "precisionAtK": 0.2,
       "recallAtK": 1.0,
-      "topScore": 0.5521,
-      "latencyMs": 29.14
+      "topScore": 0.032787,
+      "latencyMs": 28.78
     },
     {
       "id": "EVAL-019",
@@ -241,8 +241,8 @@
       "reciprocalRank": 0.0,
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
-      "topScore": 0.2751,
-      "latencyMs": 21.17
+      "topScore": 0.02895,
+      "latencyMs": 22.47
     },
     {
       "id": "EVAL-020",
@@ -253,8 +253,8 @@
       "reciprocalRank": 0.0,
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
-      "topScore": 0.3297,
-      "latencyMs": 21.22
+      "topScore": 0.030536,
+      "latencyMs": 21.65
     },
     {
       "id": "EVAL-021",
@@ -265,8 +265,8 @@
       "reciprocalRank": 0.0,
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
-      "topScore": 0.2285,
-      "latencyMs": 22.21
+      "topScore": 0.028083,
+      "latencyMs": 22.48
     },
     {
       "id": "EVAL-022",
@@ -277,8 +277,8 @@
       "reciprocalRank": 0.0,
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
-      "topScore": 0.3132,
-      "latencyMs": 21.78
+      "topScore": 0.031319,
+      "latencyMs": 22.07
     },
     {
       "id": "EVAL-023",
@@ -289,8 +289,8 @@
       "reciprocalRank": 0.0,
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
-      "topScore": 0.4841,
-      "latencyMs": 21.71
+      "topScore": 0.032522,
+      "latencyMs": 21.8
     },
     {
       "id": "EVAL-024",
@@ -301,8 +301,8 @@
       "reciprocalRank": 0.0,
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
-      "topScore": 0.3116,
-      "latencyMs": 21.92
+      "topScore": 0.031545,
+      "latencyMs": 22.59
     },
     {
       "id": "EVAL-025",
@@ -313,8 +313,8 @@
       "reciprocalRank": 0.0,
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
-      "topScore": 0.228,
-      "latencyMs": 22.16
+      "topScore": 0.027799,
+      "latencyMs": 21.89
     },
     {
       "id": "EVAL-026",
@@ -325,8 +325,8 @@
       "reciprocalRank": 0.0,
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
-      "topScore": 0.2101,
-      "latencyMs": 21.43
+      "topScore": 0.030798,
+      "latencyMs": 22.45
     },
     {
       "id": "EVAL-027",
@@ -337,8 +337,8 @@
       "reciprocalRank": 0.0,
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
-      "topScore": 0.2448,
-      "latencyMs": 22.08
+      "topScore": 0.016393,
+      "latencyMs": 22.48
     },
     {
       "id": "EVAL-028",
@@ -349,8 +349,8 @@
       "reciprocalRank": 1.0,
       "precisionAtK": 0.2,
       "recallAtK": 0.5,
-      "topScore": 0.319,
-      "latencyMs": 21.14
+      "topScore": 0.032787,
+      "latencyMs": 22.1
     },
     {
       "id": "EVAL-029",
@@ -361,8 +361,8 @@
       "reciprocalRank": 1.0,
       "precisionAtK": 0.2,
       "recallAtK": 0.5,
-      "topScore": 0.4284,
-      "latencyMs": 22.5
+      "topScore": 0.032787,
+      "latencyMs": 23.02
     },
     {
       "id": "EVAL-030",
@@ -373,8 +373,8 @@
       "reciprocalRank": 1.0,
       "precisionAtK": 0.2,
       "recallAtK": 0.25,
-      "topScore": 0.5309,
-      "latencyMs": 22.32
+      "topScore": 0.032787,
+      "latencyMs": 21.69
     },
     {
       "id": "EVAL-031",
@@ -385,8 +385,8 @@
       "reciprocalRank": 0.0,
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
-      "topScore": 0.197,
-      "latencyMs": 22.12
+      "topScore": 0.031514,
+      "latencyMs": 22.38
     },
     {
       "id": "EVAL-032",
@@ -397,8 +397,8 @@
       "reciprocalRank": 0.0,
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
-      "topScore": 0.2531,
-      "latencyMs": 22.15
+      "topScore": 0.032522,
+      "latencyMs": 22.12
     },
     {
       "id": "EVAL-033",
@@ -409,8 +409,8 @@
       "reciprocalRank": 0.0,
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
-      "topScore": 0.2776,
-      "latencyMs": 21.71
+      "topScore": 0.027273,
+      "latencyMs": 22.55
     },
     {
       "id": "EVAL-034",
@@ -421,8 +421,8 @@
       "reciprocalRank": 0.0,
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
-      "topScore": 0.2621,
-      "latencyMs": 21.96
+      "topScore": 0.016393,
+      "latencyMs": 21.41
     },
     {
       "id": "EVAL-035",
@@ -433,8 +433,8 @@
       "reciprocalRank": 1.0,
       "precisionAtK": 0.2,
       "recallAtK": 1.0,
-      "topScore": 0.6244,
-      "latencyMs": 21.6
+      "topScore": 0.032787,
+      "latencyMs": 22.29
     },
     {
       "id": "EVAL-036",
@@ -445,8 +445,8 @@
       "reciprocalRank": 1.0,
       "precisionAtK": 0.2,
       "recallAtK": 0.5,
-      "topScore": 0.3779,
-      "latencyMs": 21.88
+      "topScore": 0.029727,
+      "latencyMs": 21.87
     },
     {
       "id": "EVAL-037",
@@ -457,8 +457,8 @@
       "reciprocalRank": 0.0,
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
-      "topScore": 0.219,
-      "latencyMs": 21.94
+      "topScore": 0.016393,
+      "latencyMs": 21.43
     },
     {
       "id": "EVAL-038",
@@ -469,8 +469,8 @@
       "reciprocalRank": 0.0,
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
-      "topScore": 0.2118,
-      "latencyMs": 21.74
+      "topScore": 0.016393,
+      "latencyMs": 21.97
     },
     {
       "id": "EVAL-039",
@@ -481,8 +481,8 @@
       "reciprocalRank": 1.0,
       "precisionAtK": 1.0,
       "recallAtK": 1.0,
-      "topScore": 0.2919,
-      "latencyMs": 21.85
+      "topScore": 0.029762,
+      "latencyMs": 22.0
     },
     {
       "id": "EVAL-040",
@@ -493,8 +493,8 @@
       "reciprocalRank": 1.0,
       "precisionAtK": 1.0,
       "recallAtK": 1.0,
-      "topScore": 0.3164,
-      "latencyMs": 21.69
+      "topScore": 0.032522,
+      "latencyMs": 22.12
     },
     {
       "id": "EVAL-041",
@@ -505,8 +505,8 @@
       "reciprocalRank": 1.0,
       "precisionAtK": 1.0,
       "recallAtK": 1.0,
-      "topScore": 0.2281,
-      "latencyMs": 21.64
+      "topScore": 0.030366,
+      "latencyMs": 22.32
     },
     {
       "id": "EVAL-042",
@@ -517,8 +517,8 @@
       "reciprocalRank": 0.0,
       "precisionAtK": 0.0,
       "recallAtK": 0.0,
-      "topScore": 0.2327,
-      "latencyMs": 23.1
+      "topScore": 0.016393,
+      "latencyMs": 21.86
     }
   ]
 }
