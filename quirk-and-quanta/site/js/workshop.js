@@ -1,7 +1,7 @@
 /**
  * Quirk & Quanta - Workshop Lab Controller
  * Drives the RAG exploration interface: questions, chunk strategy switching,
- * vector retrieval, answer rendering, and latency telemetry.
+ * vector retrieval, BM25 lexical search, Hybrid RRF, comparison matrix, and telemetry.
  */
 
 let goldenQuestions = [];
@@ -57,6 +57,11 @@ function setupControls() {
   if (btnAsk) {
     btnAsk.addEventListener('click', () => executeRAG(false));
   }
+
+  const btnCompare = document.getElementById('btn-compare-strategies');
+  if (btnCompare) {
+    btnCompare.addEventListener('click', () => executeCompare());
+  }
 }
 
 async function checkBackendStatus() {
@@ -71,7 +76,7 @@ async function checkBackendStatus() {
           statusPill.textContent = '🟢 Live Gemini RAG Active';
           statusPill.className = 'badge badge-success';
         } else {
-          statusPill.textContent = '🟡 Offline Reference Engine Active';
+          statusPill.textContent = '🟡 Offline Reference Engine Active (BM25 + Hybrid Ready)';
           statusPill.className = 'badge badge-gold';
         }
       }
@@ -93,7 +98,6 @@ async function loadGoldenQuestions() {
   if (!selectEl) return;
 
   try {
-    // Try API first, then local data file
     let res = await fetch('/api/rag/questions');
     if (!res.ok) {
       res = await fetch('../data/evaluation/golden_dataset.json');
@@ -114,6 +118,7 @@ async function loadGoldenQuestions() {
 
 async function executeRAG(retrievalOnly) {
   const questionInput = document.getElementById('user-question-input');
+  const methodSelect = document.getElementById('method-select');
   const strategySelect = document.getElementById('strategy-select');
   const roleSelect = document.getElementById('role-select');
   const topKSlider = document.getElementById('top-k-slider');
@@ -124,24 +129,28 @@ async function executeRAG(retrievalOnly) {
     return;
   }
 
+  const method = methodSelect ? methodSelect.value : 'vector';
   const strategy = strategySelect ? strategySelect.value : 'semantic';
   const role = roleSelect ? roleSelect.value : 'customer';
   const topK = topKSlider ? parseInt(topKSlider.value) : 5;
 
   const modeBadge = document.getElementById('execution-mode-badge');
   if (modeBadge) {
-    modeBadge.textContent = 'Computing Embeddings & Vectors...';
+    modeBadge.textContent = `Running ${method.toUpperCase()} Search...`;
     modeBadge.className = 'badge badge-gold';
   }
 
-  // If live server API is active
+  // Hide comparison wrapper if open
+  const compWrapper = document.getElementById('comparison-card-wrapper');
+  if (compWrapper) compWrapper.style.display = 'none';
+
   if (isServerActive) {
     const endpoint = retrievalOnly ? '/api/rag/retrieve' : '/api/rag/ask';
     try {
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: jsonPayload(question, topK, strategy, role)
+        body: jsonPayload(question, topK, strategy, role, method)
       });
       if (res.ok) {
         const data = await res.json();
@@ -153,16 +162,111 @@ async function executeRAG(retrievalOnly) {
     }
   }
 
-  // Fallback: Client-side reference handler using golden dataset
+  // Fallback: Client-side reference handler
   executeClientFallback(question, topK, strategy, role, retrievalOnly);
 }
 
-function jsonPayload(question, topK, strategy, role) {
+async function executeCompare() {
+  const questionInput = document.getElementById('user-question-input');
+  const strategySelect = document.getElementById('strategy-select');
+  const roleSelect = document.getElementById('role-select');
+  const topKSlider = document.getElementById('top-k-slider');
+
+  const question = questionInput ? questionInput.value.trim() : '';
+  if (!question) {
+    alert('Please enter a question to compare retrieval methods.');
+    return;
+  }
+
+  const strategy = strategySelect ? strategySelect.value : 'semantic';
+  const role = roleSelect ? roleSelect.value : 'customer';
+  const topK = topKSlider ? parseInt(topKSlider.value) : 5;
+
+  const compWrapper = document.getElementById('comparison-card-wrapper');
+  const compGrid = document.getElementById('comparison-results-grid');
+
+  if (!isServerActive) {
+    alert('Server must be running (python3 quirk-and-quanta/rag/server.py 8000) for live comparison.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/rag/compare', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question: question,
+        topK: topK,
+        strategy: strategy,
+        role: role
+      })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      renderComparison(data);
+      if (compWrapper) compWrapper.style.display = 'block';
+    }
+  } catch (err) {
+    console.error('Error fetching comparison:', err);
+  }
+}
+
+function renderComparison(data) {
+  const compGrid = document.getElementById('comparison-results-grid');
+  if (!compGrid) return;
+
+  const strategies = [
+    { title: '1. Dense Vector (Cosine)', key: 'vector', color: '#158D89' },
+    { title: '2. Lexical BM25 (Inverted Index)', key: 'bm25', color: '#2B4C7E' },
+    { title: '3. Hybrid (RRF Fusion k=60)', key: 'hybrid', color: '#B45309' }
+  ];
+
+  let html = '';
+  strategies.forEach(st => {
+    const res = data[st.key] || {};
+    const evidence = res.evidence || [];
+    html += `
+      <div style="background: #FFFFFF; border: 1px solid var(--color-border); border-radius: 6px; padding: 12px;">
+        <div style="font-weight: 800; font-size: 0.875rem; color: ${st.color}; margin-bottom: 8px; border-bottom: 2px solid ${st.color}; padding-bottom: 4px;">
+          ${st.title}
+        </div>
+        <div style="font-size: 0.75rem; color: var(--color-text-muted); margin-bottom: 8px;">
+          Latency: ${res.latency ? res.latency.totalMs : 0} ms &bull; ${evidence.length} results
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+    `;
+
+    evidence.forEach((item, idx) => {
+      const scoreLabel = st.key === 'hybrid' ? `RRF: ${item.score}` : (st.key === 'bm25' ? `BM25: ${item.score}` : `Cos: ${item.score}`);
+      html += `
+        <div style="font-size: 0.75rem; border: 1px solid var(--color-border); border-radius: 4px; padding: 6px; background: #FAFBFD;">
+          <div style="display: flex; justify-content: space-between; font-weight: 700; color: var(--color-navy);">
+            <span>#${idx + 1} ${escapeHtml(item.sourceId)}</span>
+            <span style="color: ${st.color}; font-weight: 800;">${scoreLabel}</span>
+          </div>
+          <div style="color: var(--color-text-muted); font-size: 0.6875rem; margin-top: 2px;">
+            ${escapeHtml(item.sectionTitle || 'Section')}
+          </div>
+        </div>
+      `;
+    });
+
+    html += `
+        </div>
+      </div>
+    `;
+  });
+
+  compGrid.innerHTML = html;
+}
+
+function jsonPayload(question, topK, strategy, role, method) {
   return JSON.stringify({
     question: question,
     topK: topK,
     strategy: strategy,
-    role: role
+    role: role,
+    method: method || 'auto'
   });
 }
 
@@ -181,14 +285,15 @@ function renderResults(data, retrievalOnly) {
   // Latency
   const lat = data.latency || {};
   if (timeEmb) timeEmb.textContent = `${lat.embeddingMs || 0} ms`;
-  if (timeRet) timeRet.textContent = `${lat.retrievalMs || 0} ms`;
+  if (timeRet) timeRet.textContent = `${lat.retrievalMs || lat.vectorRetrievalMs || 0} ms`;
   if (timeGen) timeGen.textContent = `${lat.generationMs || 0} ms`;
   if (timeTotal) timeTotal.textContent = `${lat.totalMs || 0} ms`;
 
   // Mode Badge
   if (modeBadge) {
     const isLive = data.executionMode === 'live_gemini';
-    modeBadge.textContent = isLive ? 'Live Gemini 2.5 Flash' : 'Offline Reference Synthesis';
+    const methodTag = (data.retrievalMethod || 'vector').toUpperCase();
+    modeBadge.textContent = isLive ? `Live Gemini (${methodTag})` : `Reference Synthesizer (${methodTag})`;
     modeBadge.className = isLive ? 'badge badge-success' : 'badge badge-navy';
   }
 
@@ -210,7 +315,7 @@ function renderResults(data, retrievalOnly) {
 
   // Evidence Chunks
   const evidence = data.evidence || [];
-  if (evidenceCount) evidenceCount.textContent = `${evidence.length} chunks retrieved`;
+  if (evidenceCount) evidenceCount.textContent = `${evidence.length} chunks retrieved via ${(data.retrievalMethod || 'vector').toUpperCase()}`;
 
   if (!evidenceList) return;
   if (evidence.length === 0) {
@@ -224,17 +329,26 @@ function renderResults(data, retrievalOnly) {
 
   let html = '';
   evidence.forEach(e => {
-    const scorePct = Math.round(e.score * 100);
     const isConfidential = e.accessLevel !== 'public';
+    let meterInfo = '';
+    if (e.strategy === 'hybrid' || e.rrfScore !== undefined) {
+      meterInfo = `RRF Score: ${e.score} (Vec Rank: #${e.vectorRank || '-'}, BM25 Rank: #${e.bm25Rank || '-'})`;
+    } else if (e.retrievalMethod === 'bm25' || e.bm25Score !== undefined) {
+      meterInfo = `BM25: ${e.score} (Matched: ${(e.matchedTerms || []).join(', ') || 'lexical'})`;
+    } else {
+      meterInfo = `Cosine: ${e.score.toFixed(4)} (${Math.round(e.score * 100)}%)`;
+    }
+
     html += `
       <div class="evidence-card">
         <div class="evidence-header">
           <div style="display: flex; align-items: center; gap: 8px;">
             <span class="badge ${isConfidential ? 'badge-danger' : 'badge-navy'}">Rank #${e.rank}</span>
             <span class="chunk-id-tag">${e.chunkId}</span>
+            ${e.strategy === 'hybrid' ? '<span class="badge badge-gold" style="font-size:0.6875rem;">HYBRID RRF</span>' : ''}
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="score-meter">Cosine: ${e.score.toFixed(4)} (${scorePct}%)</span>
+            <span class="score-meter">${meterInfo}</span>
             <span class="badge ${isConfidential ? 'badge-gold' : 'badge-teal'}">${e.accessLevel.toUpperCase()}</span>
           </div>
         </div>
@@ -276,6 +390,7 @@ function executeClientFallback(question, topK, strategy, role, retrievalOnly) {
     question: question,
     role: role,
     strategy: strategy,
+    retrievalMethod: 'hybrid_fallback',
     executionMode: 'offline_reference',
     latency: {
       embeddingMs: 1.2,

@@ -3,8 +3,9 @@
 Quirk & Quanta - Unified Storefront & RAG API Server
 Zero external dependencies (uses standard library http.server).
 Serves static storefront assets from site/ and provides live JSON endpoints:
-- POST /api/rag/retrieve (Retrieval-only)
-- POST /api/rag/ask      (Full RAG pipeline)
+- POST /api/rag/retrieve (Multi-strategy Retrieval: Vector, BM25, Hybrid)
+- POST /api/rag/ask      (Full grounded RAG pipeline)
+- POST /api/rag/compare  (Side-by-side Vector vs BM25 vs Hybrid comparison)
 - GET  /api/rag/status   (System health & model telemetry)
 - GET  /api/rag/questions (Curated golden evaluation questions)
 - GET  /api/rag/telemetry (Chunking strategy statistics)
@@ -67,6 +68,20 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 "generationModel": "gemini-2.5-flash",
                 "hasGeminiKey": bool(api_key),
                 "activeMode": "live_gemini" if bool(api_key) else "offline_reference",
+                "featureFlags": {
+                    "ENABLE_VECTOR": True,
+                    "ENABLE_BM25": True,
+                    "ENABLE_HYBRID": True,
+                    "ENABLE_GRAPH_LOCAL": False,
+                    "ENABLE_GRAPH_NEO4J": False,
+                    "ENABLE_GENERATION": True,
+                    "ENABLE_GROUNDING": True,
+                    "ENABLE_PROMPT_INJECTION_DEFENSE": False,
+                    "ENABLE_RBAC": True,
+                    "ENABLE_USAGE_LIMITS": False,
+                    "ENABLE_OBSERVABILITY": False,
+                    "ENABLE_RECORDED_DEMOS": True
+                },
                 "embeddings": manifest.get("strategies", {}),
                 "totalChunks": manifest.get("totalChunksEmbedded", 0)
             })
@@ -109,6 +124,7 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         question = params.get("question", "").strip()
         top_k = int(params.get("topK", 5))
         strategy = params.get("strategy", "semantic")
+        method = params.get("method", "auto")
         role = params.get("role", "customer")
         api_key = os.environ.get("GEMINI_API_KEY")
 
@@ -121,6 +137,7 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 question=question,
                 top_k=top_k,
                 strategy=strategy,
+                method=method,
                 role=role,
                 retrieval_only=True,
                 api_key=api_key
@@ -133,8 +150,20 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 question=question,
                 top_k=top_k,
                 strategy=strategy,
+                method=method,
                 role=role,
                 retrieval_only=False,
+                api_key=api_key
+            )
+            self._send_json(result)
+            return
+
+        elif path == "/api/rag/compare":
+            result = pipeline.compare(
+                question=question,
+                top_k=top_k,
+                strategy=strategy,
+                role=role,
                 api_key=api_key
             )
             self._send_json(result)
@@ -154,6 +183,7 @@ def run_server(port=8000):
         print(f"API Endpoints:")
         print(f"  - POST http://localhost:{port}/api/rag/retrieve")
         print(f"  - POST http://localhost:{port}/api/rag/ask")
+        print(f"  - POST http://localhost:{port}/api/rag/compare")
         print(f"  - GET  http://localhost:{port}/api/rag/status")
         print(f"  - GET  http://localhost:{port}/api/rag/questions")
         print(f"  - GET  http://localhost:{port}/api/rag/telemetry")

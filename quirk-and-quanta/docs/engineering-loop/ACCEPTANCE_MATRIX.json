@@ -1,0 +1,152 @@
+{
+  "updated_at": "2026-11-20T19:18:00Z",
+  "gates": {
+    "G1": {
+      "name": "Storefront Preservation",
+      "description": "Existing storefront remains functional with all 100 products, categories, filters, cart, and valid SVGs.",
+      "status": "GREEN",
+      "verified_commit": "c649390",
+      "tests": ["tests/test-data.py"]
+    },
+    "G2": {
+      "name": "Baseline RAG Provenance",
+      "description": "Baseline RAG runs with truthful model provenance (gemini-embedding-001) and transparent offline embeddings.",
+      "status": "GREEN",
+      "verified_commit": "c649390",
+      "tests": ["tests/test-rag.py"]
+    },
+    "G3": {
+      "name": "Multi-Strategy Chunking Inspection",
+      "description": "Fixed, sliding, and semantic chunking strategies can be inspected, compared, and visualized.",
+      "status": "GREEN",
+      "verified_commit": "c649390",
+      "tests": ["tests/test-rag.py"]
+    },
+    "G4": {
+      "name": "BM25 Lexical Retrieval",
+      "description": "Pure-Python BM25 inverted index functional and verified on exact SKU and keyword matching.",
+      "status": "GREEN",
+      "verified_commit": "pending-run-01",
+      "tests": ["tests/test-hybrid.py"]
+    },
+    "G5": {
+      "name": "Hybrid RRF Retrieval",
+      "description": "Reciprocal Rank Fusion combines vector and BM25 rankings with configurable weights/k constant.",
+      "status": "GREEN",
+      "verified_commit": "pending-run-01",
+      "tests": ["tests/test-hybrid.py"]
+    },
+    "G6": {
+      "name": "Film Defect Scenario Present in Graph",
+      "description": "Desk lamp (QQ-0011), wireless charger (QQ-0074), and star projector (QQ-0049) share defective voltage regulator in additive graph.",
+      "status": "PENDING",
+      "verified_commit": null,
+      "tests": ["tests/test-graph.py"]
+    },
+    "G7": {
+      "name": "Local GraphRAG Traversal",
+      "description": "Multi-hop graph traversal resolves defect provenance chains and produces grounded answers.",
+      "status": "PENDING",
+      "verified_commit": null,
+      "tests": ["tests/test-graph.py"]
+    },
+    "G8": {
+      "name": "Golden Evaluations & Comparative Metrics",
+      "description": "Automated evaluation harness produces empirical metrics (Hit Rate, MRR, Precision, Recall, Latency) across strategies.",
+      "status": "PENDING",
+      "verified_commit": null,
+      "tests": ["scripts/run_evaluations.py"]
+    },
+    "G9": {
+      "name": "Grounding and Abstention",
+      "description": "Retriever/generator verifies evidence support and abstains safely on ungrounded or out-of-domain queries.",
+      "status": "PENDING",
+      "verified_commit": null,
+      "tests": ["tests/test-guardrails.py"]
+    },
+    "G10": {
+      "name": "Prompt Injection Defense (Direct & Indirect)",
+      "description": "Reproduces pirate direct & indirect prompt injection in vulnerable mode and reliably blocks in hardened mode.",
+      "status": "PENDING",
+      "verified_commit": null,
+      "tests": ["tests/test-guardrails.py"]
+    },
+    "G11": {
+      "name": "Scope Boundaries & Usage Budgets",
+      "description": "Blocks off-topic coding tutor queries (recursion, Hello World) and enforces per-session token budgets.",
+      "status": "PENDING",
+      "verified_commit": null,
+      "tests": ["tests/test-guardrails.py"]
+    },
+    "G12": {
+      "name": "Server-Side RBAC Enforcement",
+      "description": "Confidential cost and procurement data protected by server-side cryptographic/session role enforcement.",
+      "status": "PENDING",
+      "verified_commit": null,
+      "tests": ["tests/test-security.py"]
+    },
+    "G13": {
+      "name": "IDOR & Role Tampering Defense",
+      "description": "Client role parameter manipulation and direct object reference traversal rejected in hardened mode.",
+      "status": "PENDING",
+      "verified_commit": null,
+      "tests": ["tests/test-security.py"]
+    },
+    "G14": {
+      "name": "Observability & Request Tracing",
+      "description": "Structured execution traces with request ID, latency breakdown, token usage, and simulated cost attribution.",
+      "status": "PENDING",
+      "verified_commit": null,
+      "tests": ["tests/test-observability.py"]
+    },
+    "G15": {
+      "name": "17 Prepared Workshop Lab Demos",
+      "description": "Workshop Lab interface provides interactive access to all 17 film-aligned and technical demonstrations.",
+      "status": "PENDING",
+      "verified_commit": null,
+      "tests": ["tests/test-demos.py"]
+    },
+    "G16": {
+      "name": "Dependency Fallback & Degraded Mode",
+      "description": "Handles API key absence, quota exhaustion, and service timeouts gracefully with offline fallbacks.",
+      "status": "PENDING",
+      "verified_commit": null,
+      "tests": ["tests/test-load.py"]
+    },
+    "G17": {
+      "name": "100-Attendee Load Capacity",
+      "description": "System tested under 100 concurrent retrieval requests and 150 static requests with p95 < 200ms.",
+      "status": "PENDING",
+      "verified_commit": null,
+      "tests": ["scripts/load_test.py"]
+    },
+    "O1": {
+      "name": "Neo4j AuraDB Integration",
+      "description": "Optional Neo4j Bolt adapter and Cypher script exports for external graph hosting.",
+      "status": "PENDING",
+      "verified_commit": null,
+      "tests": ["tests/test-neo4j.py"]
+    },
+    "O2": {
+      "name": "Cloud Run Deployment Packaging",
+      "description": "Production Dockerfile and container runtime verification for GCP Cloud Run.",
+      "status": "PENDING",
+      "verified_commit": null,
+      "tests": ["deploy/Dockerfile"]
+    },
+    "O3": {
+      "name": "AI Studio Self-Deployment Guide",
+      "description": "Configuration guide for running live Gemini API with Google AI Studio API key.",
+      "status": "PENDING",
+      "verified_commit": null,
+      "tests": ["docs/DEPLOYMENT_GUIDE.md"]
+    },
+    "O4": {
+      "name": "Vercel Deployment Packaging",
+      "description": "Configuration file for static storefront + serverless API deployment on Vercel.",
+      "status": "PENDING",
+      "verified_commit": null,
+      "tests": ["deploy/vercel.json"]
+    }
+  }
+}

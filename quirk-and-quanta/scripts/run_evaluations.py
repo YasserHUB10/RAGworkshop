@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Quirk & Quanta - RAG Benchmark & Evaluation Runner
+Quirk & Quanta - Multi-Strategy RAG Benchmark & Evaluation Runner
 Executes the golden evaluation dataset (22 curated test cases across 8 families)
-against the RAG retrieval pipeline and measures empirical metrics:
+against Vector, BM25, and Hybrid RRF pipelines and measures empirical metrics:
 - Hit Rate @ k
 - Precision @ k
 - Recall @ k
@@ -15,6 +15,7 @@ import os
 import sys
 import json
 import time
+from typing import Dict, Any
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT_DIR not in sys.path:
@@ -24,10 +25,10 @@ from rag.pipeline import RAGPipeline
 
 EVAL_DIR = os.path.join(ROOT_DIR, "data", "evaluation")
 
-def run_evaluation(strategy="semantic", top_k=5):
-    print("=" * 65)
-    print(f"RUNNING RAG BENCHMARK EVALUATION (Strategy: {strategy}, Top-K: {top_k})")
-    print("=" * 65)
+def run_evaluation(strategy: str = "semantic", method: str = "vector", top_k: int = 5) -> Dict[str, Any]:
+    print("=" * 70)
+    print(f"RUNNING RAG BENCHMARK (Strategy: {strategy}, Method: {method.upper()}, Top-K: {top_k})")
+    print("=" * 70)
 
     golden_file = os.path.join(EVAL_DIR, "golden_dataset.json")
     if not os.path.exists(golden_file):
@@ -49,7 +50,7 @@ def run_evaluation(strategy="semantic", top_k=5):
     rbac_total = 0
 
     print(f"{'ID':<10} {'Family':<24} {'Role':<10} {'Hit?':<6} {'Score':<8} {'Time (ms)':<10}")
-    print("-" * 65)
+    print("-" * 70)
 
     for item in cases:
         qid = item["id"]
@@ -57,13 +58,19 @@ def run_evaluation(strategy="semantic", top_k=5):
         q_text = item["question"]
         expected_sources = item.get("relevantSourceIds", [])
         expected_docs = item.get("relevantDocIds", [])
-        auth_roles = item.get("authorizedRoles", ["customer"])
         
         # Test role based on query type
         role = "admin" if "admin" in family or "authorized_admin" in family else "customer"
 
         t_start = time.perf_counter()
-        res = pipeline.ask(question=q_text, top_k=top_k, strategy=strategy, role=role, retrieval_only=True)
+        res = pipeline.ask(
+            question=q_text,
+            top_k=top_k,
+            strategy=strategy,
+            method=method,
+            role=role,
+            retrieval_only=True
+        )
         t_elapsed = round((time.perf_counter() - t_start) * 1000, 2)
         latencies.append(t_elapsed)
 
@@ -77,10 +84,10 @@ def run_evaluation(strategy="semantic", top_k=5):
         p_at_k = 0.0
         r_at_k = 0.0
 
-        # For out-of-domain and prompt injection, expected_sources is empty
         if family in ["out_of_domain", "prompt_injection"]:
-            # Correct behavior is low similarity / abstention
-            is_hit = (top_score < 0.20)
+            # Correct behavior: either 0 matches, or very low score
+            # In BM25, out_of_domain queries often return 0 matches (ideal precision!)
+            is_hit = (len(res["evidence"]) == 0) or (top_score < 0.20 and method == "vector") or (top_score < 2.0 and method == "bm25")
             rr = 1.0 if is_hit else 0.0
             p_at_k = 1.0 if is_hit else 0.0
             r_at_k = 1.0 if is_hit else 0.0
@@ -95,20 +102,17 @@ def run_evaluation(strategy="semantic", top_k=5):
             if not has_leak:
                 rbac_pass += 1
         else:
-            # Check overlap between retrieved sources/docs and expected
             overlap_sources = set(retrieved_sources).intersection(set(expected_sources))
             overlap_docs = set(retrieved_docs).intersection(set(expected_docs))
             has_relevant = bool(overlap_sources or overlap_docs)
             is_hit = has_relevant
 
             if is_hit:
-                # Find rank of first relevant item
                 for rank_idx, e in enumerate(res["evidence"], 1):
                     if e["sourceId"] in expected_sources or e["docId"] in expected_docs:
                         rr = 1.0 / rank_idx
                         break
 
-            # Precision & Recall
             relevant_retrieved = len(overlap_sources or overlap_docs)
             p_at_k = round(relevant_retrieved / max(len(res["evidence"]), 1), 3)
             r_at_k = round(relevant_retrieved / max(len(expected_sources or expected_docs), 1), 3)
@@ -152,20 +156,21 @@ def run_evaluation(strategy="semantic", top_k=5):
     p95_latency = latencies[int(len(latencies) * 0.95)]
     avg_latency = round(sum(latencies) / len(latencies), 2)
 
-    print("-" * 65)
+    print("-" * 70)
     print("EMPIRICAL BENCHMARK SUMMARY:")
     print(f"  - Total Test Questions:    {total_q}")
     print(f"  - Hit Rate @ {top_k}:            {hit_rate * 100:.1f}% ({hits}/{total_q})")
     print(f"  - Mean Reciprocal Rank:    {mrr:.4f}")
     print(f"  - Mean Precision @ {top_k}:      {mean_precision:.4f}")
     print(f"  - Mean Recall @ {top_k}:         {mean_recall:.4f}")
-    print(f"  - RBAC Compliance:         {rbac_pass}/{rbac_total} tests passing (100%)" if rbac_total > 0 else "")
+    print(f"  - RBAC Compliance:         {rbac_pass}/{rbac_total} ({100 if rbac_total==rbac_pass else 0}%)" if rbac_total > 0 else "")
     print(f"  - Latency: p50={p50_latency:.1f}ms | p95={p95_latency:.1f}ms | avg={avg_latency:.1f}ms")
-    print("=" * 65)
+    print("=" * 70)
 
     eval_output = {
         "benchmarkDate": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
         "strategy": strategy,
+        "method": method,
         "topK": top_k,
         "metrics": {
             "totalQuestions": total_q,
@@ -180,13 +185,23 @@ def run_evaluation(strategy="semantic", top_k=5):
         "testCases": results
     }
 
-    out_file = os.path.join(EVAL_DIR, "eval_results.json")
+    out_file = os.path.join(EVAL_DIR, f"eval_results_{method}.json")
     with open(out_file, "w", encoding="utf-8") as f:
         json.dump(eval_output, f, indent=2)
 
-    print(f"Saved full empirical evaluation log -> data/evaluation/eval_results.json")
+    # Also save as main eval_results.json
+    with open(os.path.join(EVAL_DIR, "eval_results.json"), "w", encoding="utf-8") as f:
+        json.dump(eval_output, f, indent=2)
+
     return eval_output
 
 if __name__ == "__main__":
-    strat = sys.argv[1] if len(sys.argv) > 1 else "semantic"
-    run_evaluation(strategy=strat)
+    method_arg = "vector"
+    strat_arg = "semantic"
+    for arg in sys.argv[1:]:
+        if arg in ["vector", "bm25", "hybrid"]:
+            method_arg = arg
+        elif arg in ["semantic", "fixed", "sliding"]:
+            strat_arg = arg
+
+    run_evaluation(strategy=strat_arg, method=method_arg)

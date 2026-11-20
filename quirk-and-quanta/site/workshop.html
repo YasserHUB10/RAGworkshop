@@ -288,6 +288,16 @@
                       placeholder="Type a product question, SKU (e.g. QQ-0015), or concept..."></textarea>
           </div>
 
+          <!-- Retrieval Method Selector (Gate 4 & 5) -->
+          <div class="form-group">
+            <label class="form-label" for="method-select">Retrieval Method / Engine</label>
+            <select id="method-select" class="form-select">
+              <option value="vector" selected>Dense Semantic Vector (Cosine / gemini-embedding-001)</option>
+              <option value="bm25">Lexical BM25 (Okapi Inverted Index, Exact SKU)</option>
+              <option value="hybrid">Hybrid RAG (Reciprocal Rank Fusion - RRF k=60)</option>
+            </select>
+          </div>
+
           <!-- Chunking Strategy Selector -->
           <div class="form-group">
             <label class="form-label" for="strategy-select">Chunking Strategy</label>
@@ -326,6 +336,11 @@
             </button>
             <button id="btn-ask-rag" class="btn btn-primary" style="flex: 1; font-size: 0.8125rem;">
               ⚡ Ask Full RAG
+            </button>
+          </div>
+          <div style="margin-top: 10px;">
+            <button id="btn-compare-strategies" class="btn btn-secondary" style="width: 100%; font-size: 0.8125rem; background: var(--color-navy); color: #fff;">
+              ⚖️ Compare Methods (Vector vs BM25 vs Hybrid)
             </button>
           </div>
 
@@ -367,6 +382,19 @@
                 </div>
                 <div id="answer-citations-list"></div>
               </div>
+            </div>
+          </div>
+
+          <!-- Comparison Panel (Gate 4 & 5) -->
+          <div id="comparison-card-wrapper" style="display: none; margin-bottom: 24px;">
+            <div class="lab-panel" style="background: #F8FAFC; border: 2px solid var(--color-teal);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="font-size: 1rem; font-weight: 800; color: var(--color-navy); margin: 0;">
+                  ⚖️ Side-by-Side Strategy Comparison
+                </h3>
+                <span class="badge badge-teal">Vector vs BM25 vs Hybrid (RRF)</span>
+              </div>
+              <div id="comparison-results-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;"></div>
             </div>
           </div>
 
