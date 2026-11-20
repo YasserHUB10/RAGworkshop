@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-20T14:32:14Z",
+  "timestamp": "2026-11-20T15:19:04Z",
   "transportMode": "in_process",
   "targetUrl": "in-process-concurrent",
   "scenarios": {
@@ -10,15 +10,15 @@
       "successfulRequests": 100,
       "failedRequests": 0,
       "errorRatePercent": 0.0,
-      "totalDurationSec": 3.424,
-      "throughputReqPerSec": 29.21,
+      "totalDurationSec": 3.152,
+      "throughputReqPerSec": 31.72,
       "latencyMs": {
-        "min": 0.5,
-        "max": 3329.95,
-        "mean": 594.85,
-        "p50": 324.4,
-        "p95": 2614.55,
-        "p99": 3255.41
+        "min": 0.32,
+        "max": 2714.68,
+        "mean": 458.05,
+        "p50": 257.16,
+        "p95": 2073.29,
+        "p99": 2711.33
       }
     },
     "scenario_b_static_assets_burst": {
@@ -28,15 +28,15 @@
       "successfulRequests": 150,
       "failedRequests": 0,
       "errorRatePercent": 0.0,
-      "totalDurationSec": 0.011,
-      "throughputReqPerSec": 13085.06,
+      "totalDurationSec": 0.013,
+      "throughputReqPerSec": 11492.42,
       "latencyMs": {
-        "min": 0.15,
-        "max": 4.25,
-        "mean": 1.87,
-        "p50": 1.84,
-        "p95": 3.63,
-        "p99": 4.02
+        "min": 0.71,
+        "max": 8.98,
+        "mean": 3.41,
+        "p50": 3.29,
+        "p95": 7.18,
+        "p99": 7.92
       }
     },
     "scenario_c_mixed_traffic": {
@@ -46,15 +46,15 @@
       "successfulRequests": 100,
       "failedRequests": 0,
       "errorRatePercent": 0.0,
-      "totalDurationSec": 1.187,
-      "throughputReqPerSec": 84.26,
+      "totalDurationSec": 1.209,
+      "throughputReqPerSec": 82.68,
       "latencyMs": {
-        "min": 0.07,
-        "max": 467.46,
-        "mean": 168.98,
-        "p50": 164.49,
-        "p95": 354.69,
-        "p99": 399.76
+        "min": 34.9,
+        "max": 499.98,
+        "mean": 170.7,
+        "p50": 135.64,
+        "p95": 391.27,
+        "p99": 426.2
       }
     }
   },
@@ -62,8 +62,8 @@
     "totalWorkshopRequestsExecuted": 350,
     "totalFailures": 0,
     "overallErrorRatePercent": 0.0,
-    "staticP95Ms": 3.63,
-    "retrievalP95Ms": 2614.55,
+    "staticP95Ms": 7.18,
+    "retrievalP95Ms": 2073.29,
     "verdict": "PASS"
   }
 }
