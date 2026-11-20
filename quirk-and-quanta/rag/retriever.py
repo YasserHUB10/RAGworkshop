@@ -10,6 +10,7 @@ import sys
 import json
 import time
 import math
+import threading
 from typing import List, Dict, Any, Optional
 
 # Add scripts directory for offline embedding fallback
@@ -40,7 +41,10 @@ class QuirkRetriever:
         self.bm25_indices: Dict[str, BM25Retriever] = {}
         self.hybrid_engine = HybridRetriever()
         self.query_cache: Dict[str, Any] = {}
+        self.lock = threading.Lock()
         self._load_query_cache()
+        # Eagerly warm default strategy cache to prevent race condition during concurrency
+        self._load_strategy(default_strategy)
 
     def _load_query_cache(self):
         cache_path = os.path.join(EMBEDDINGS_DIR, "query_embeddings_cache.json")
@@ -49,32 +53,33 @@ class QuirkRetriever:
                 self.query_cache = json.load(f)
 
     def _load_strategy(self, strategy: str):
-        if strategy not in self.chunks_cache:
-            chunk_file = os.path.join(CHUNKS_DIR, f"chunks_{strategy}.json")
-            emb_file = os.path.join(EMBEDDINGS_DIR, f"embeddings_{strategy}.json")
+        with self.lock:
+            if strategy not in self.chunks_cache:
+                chunk_file = os.path.join(CHUNKS_DIR, f"chunks_{strategy}.json")
+                emb_file = os.path.join(EMBEDDINGS_DIR, f"embeddings_{strategy}.json")
 
-            if not os.path.exists(chunk_file) or not os.path.exists(emb_file):
-                raise FileNotFoundError(f"Missing chunk/embedding data for strategy: {strategy}")
+                if not os.path.exists(chunk_file) or not os.path.exists(emb_file):
+                    raise FileNotFoundError(f"Missing chunk/embedding data for strategy: {strategy}")
 
-            with open(chunk_file, "r", encoding="utf-8") as f:
-                chunks = json.load(f)
-            with open(emb_file, "r", encoding="utf-8") as f:
-                embeddings = json.load(f)
+                with open(chunk_file, "r", encoding="utf-8") as f:
+                    chunks = json.load(f)
+                with open(emb_file, "r", encoding="utf-8") as f:
+                    embeddings = json.load(f)
 
-            # Map chunks by chunkId
-            chunk_map = {c["chunkId"]: c for c in chunks}
-            for emb in embeddings:
-                cid = emb["chunkId"]
-                if cid in chunk_map:
-                    emb["chunkData"] = chunk_map[cid]
+                # Map chunks by chunkId
+                chunk_map = {c["chunkId"]: c for c in chunks}
+                for emb in embeddings:
+                    cid = emb["chunkId"]
+                    if cid in chunk_map:
+                        emb["chunkData"] = chunk_map[cid]
 
-            self.chunks_cache[strategy] = chunks
-            self.embeddings_cache[strategy] = embeddings
+                self.chunks_cache[strategy] = chunks
+                self.embeddings_cache[strategy] = embeddings
 
-            # Build BM25 inverted index for this chunking strategy
-            bm25 = BM25Retriever()
-            bm25.build_index(chunks, strategy_name=strategy)
-            self.bm25_indices[strategy] = bm25
+                # Build BM25 inverted index for this chunking strategy
+                bm25 = BM25Retriever()
+                bm25.build_index(chunks, strategy_name=strategy)
+                self.bm25_indices[strategy] = bm25
 
     def embed_query(self, query_text: str, api_key: Optional[str] = None) -> tuple[List[float], str]:
         """
@@ -133,10 +138,14 @@ class QuirkRetriever:
 
             filtered.append(item)
 
-        # Step 3: Cosine Similarity
+        # Step 3: Cosine Similarity (Fast dot product on unit-normalized vectors)
+        q_norm = math.sqrt(sum(x * x for x in query_vec))
+        norm_q = [x / q_norm for x in query_vec] if q_norm > 1e-12 else query_vec
+
         scored = []
         for item in filtered:
-            score = cosine_similarity(query_vec, item["vector"])
+            vec = item["vector"]
+            score = sum(a * b for a, b in zip(norm_q, vec))
             scored.append((score, item))
 
         scored.sort(key=lambda x: x[0], reverse=True)

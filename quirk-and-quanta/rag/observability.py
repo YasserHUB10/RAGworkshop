@@ -10,6 +10,7 @@ Implements:
 import os
 import time
 import uuid
+import threading
 from typing import Dict, Any, List, Optional
 from collections import deque
 
@@ -107,6 +108,7 @@ class TraceCollector:
         self.total_requests = 0
         self.total_tokens = 0
         self.total_cost_usd = 0.0
+        self.lock = threading.Lock()
 
     def start_trace(
         self,
@@ -122,28 +124,32 @@ class TraceCollector:
 
     def record_trace(self, trace: RequestTrace):
         trace_data = trace.to_dict()
-        self.traces.appendleft(trace_data)
-        self.total_requests += 1
-        self.total_tokens += trace_data["tokenUsage"]["totalTokens"]
-        self.total_cost_usd = round(self.total_cost_usd + trace_data["estimatedCostUsd"], 8)
+        with self.lock:
+            self.traces.appendleft(trace_data)
+            self.total_requests += 1
+            self.total_tokens += trace_data["tokenUsage"]["totalTokens"]
+            self.total_cost_usd = round(self.total_cost_usd + trace_data["estimatedCostUsd"], 8)
 
     def get_recent_traces(self, limit: int = 20) -> List[Dict[str, Any]]:
-        return list(self.traces)[:limit]
+        with self.lock:
+            return list(self.traces)[:limit]
 
     def get_trace(self, request_id: str) -> Optional[Dict[str, Any]]:
-        for t in self.traces:
-            if t["requestId"] == request_id:
-                return t
-        return None
+        with self.lock:
+            for t in self.traces:
+                if t["requestId"] == request_id:
+                    return t
+            return None
 
     def get_aggregate_telemetry(self) -> Dict[str, Any]:
-        return {
-            "totalRequestsTracked": self.total_requests,
-            "totalTokensTracked": self.total_tokens,
-            "totalCostUsd": self.total_cost_usd,
-            "tracesInMemory": len(self.traces),
-            "pricingModel": "gemini-2.5-flash ($0.075/1M in, $0.30/1M out)"
-        }
+        with self.lock:
+            return {
+                "totalRequestsTracked": self.total_requests,
+                "totalTokensTracked": self.total_tokens,
+                "totalCostUsd": self.total_cost_usd,
+                "tracesInMemory": len(self.traces),
+                "pricingModel": "gemini-2.5-flash ($0.075/1M in, $0.30/1M out)"
+            }
 
     def simulate_cost_spike(self, iterations: int = 40) -> Dict[str, Any]:
         """

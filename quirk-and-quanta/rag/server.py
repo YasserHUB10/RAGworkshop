@@ -32,10 +32,12 @@ if ROOT_DIR not in sys.path:
 
 from rag.pipeline import RAGPipeline
 from rag.graph_local import get_graph
+from rag.graph_neo4j import get_neo4j_adapter
 from rag.auth import create_signed_token, resolve_effective_role, check_resource_access
 
 pipeline = RAGPipeline(default_strategy="semantic")
 graph = get_graph()
+neo4j_adapter = get_neo4j_adapter()
 
 class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -80,7 +82,7 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     "ENABLE_BM25": True,
                     "ENABLE_HYBRID": True,
                     "ENABLE_GRAPH_LOCAL": True,
-                    "ENABLE_GRAPH_NEO4J": False,
+                    "ENABLE_GRAPH_NEO4J": True,
                     "ENABLE_GENERATION": True,
                     "ENABLE_GROUNDING": True,
                     "ENABLE_PROMPT_INJECTION_DEFENSE": True,
@@ -90,6 +92,7 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     "ENABLE_RECORDED_DEMOS": True
                 },
                 "graphNodes": len(graph.nodes),
+                "neo4j": neo4j_adapter.get_telemetry(),
                 "observability": pipeline.tracer.get_aggregate_telemetry(),
                 "embeddings": manifest.get("strategies", {}),
                 "totalChunks": manifest.get("totalChunksEmbedded", 0)
@@ -223,11 +226,6 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             }
             self._send_json(result)
             return
-                hardened=hardened,
-                session_id=session_id
-            )
-            self._send_json(result)
-            return
 
         elif path == "/api/rag/compare":
             if not question:
@@ -250,7 +248,12 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 skus = re.findall(r'QQ-[0-9]{4}', question.upper())
             if not skus:
                 skus = ["QQ-0011", "QQ-0074", "QQ-0049"]
-            result = graph.trace_defect_root_cause(skus)
+            
+            graph_engine = params.get("engine", "local").lower()
+            if graph_engine in ["neo4j", "auradb"]:
+                result = neo4j_adapter.trace_defect_root_cause(skus)
+            else:
+                result = graph.trace_defect_root_cause(skus)
             self._send_json(result)
             return
 
@@ -327,11 +330,16 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
         self._send_json({"error": f"Endpoint not found: {path}"}, status=404)
 
+def create_server(port=8000):
+    http.server.ThreadingHTTPServer.allow_reuse_address = True
+    server = http.server.ThreadingHTTPServer(("", port), QuirkHTTPRequestHandler)
+    server.daemon_threads = True
+    return server
+
 def run_server(port=8000):
-    handler = QuirkHTTPRequestHandler
-    with socketserver.TCPServer(("", port), handler) as httpd:
+    with create_server(port) as httpd:
         print("=" * 60)
-        print(f"QUIRK & QUANTA UNIFIED STOREFRONT & RAG SERVER")
+        print(f"QUIRK & QUANTA UNIFIED STOREFRONT & RAG SERVER (Concurrent Threading)")
         print("=" * 60)
         print(f"Serving static site: {SITE_DIR}")
         print(f"Storefront URL:      http://localhost:{port}/index.html")

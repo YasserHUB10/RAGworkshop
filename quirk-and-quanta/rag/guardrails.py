@@ -11,6 +11,7 @@ Implements:
 
 import re
 import time
+import threading
 from typing import Dict, Any, List, Tuple, Optional
 
 # Regex patterns for direct adversarial prompt injection
@@ -37,6 +38,7 @@ class GuardrailsEngine:
         self.session_tokens: Dict[str, int] = {}
         self.max_requests_per_minute = 30
         self.max_tokens_per_session = 15000
+        self.lock = threading.Lock()
 
     def check_direct_injection(self, query: str) -> Tuple[bool, Optional[str]]:
         """
@@ -108,22 +110,23 @@ class GuardrailsEngine:
         Enforces per-session rate limits and token budgets to prevent cost spikes (Story 7).
         """
         now = time.time()
-        if session_id not in self.session_usage:
-            self.session_usage[session_id] = []
-            self.session_tokens[session_id] = 0
+        with self.lock:
+            if session_id not in self.session_usage:
+                self.session_usage[session_id] = []
+                self.session_tokens[session_id] = 0
 
-        # Prune calls older than 60 seconds
-        self.session_usage[session_id] = [t for t in self.session_usage[session_id] if now - t < 60.0]
+            # Prune calls older than 60 seconds
+            self.session_usage[session_id] = [t for t in self.session_usage[session_id] if now - t < 60.0]
 
-        if len(self.session_usage[session_id]) >= self.max_requests_per_minute:
-            return False, f"Rate limit exceeded: Max {self.max_requests_per_minute} requests per minute reached."
+            if len(self.session_usage[session_id]) >= self.max_requests_per_minute:
+                return False, f"Rate limit exceeded: Max {self.max_requests_per_minute} requests per minute reached."
 
-        if self.session_tokens[session_id] + estimated_tokens > self.max_tokens_per_session:
-            return False, f"Session budget exhausted: Exceeded {self.max_tokens_per_session} token safety allocation."
+            if self.session_tokens[session_id] + estimated_tokens > self.max_tokens_per_session:
+                return False, f"Session budget exhausted: Exceeded {self.max_tokens_per_session} token safety allocation."
 
-        self.session_usage[session_id].append(now)
-        self.session_tokens[session_id] += estimated_tokens
-        return True, None
+            self.session_usage[session_id].append(now)
+            self.session_tokens[session_id] += estimated_tokens
+            return True, None
 
     def evaluate_request(
         self,
