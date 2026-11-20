@@ -40,14 +40,14 @@
       "name": "Film Defect Scenario Present in Graph",
       "description": "Desk lamp (QQ-0011), wireless charger (QQ-0074), and star projector (QQ-0049) share defective voltage regulator in additive graph.",
       "status": "GREEN",
-      "verified_commit": "pending-run-02",
+      "verified_commit": "4b087bd",
       "tests": ["tests/test-graph.py"]
     },
     "G7": {
       "name": "Local GraphRAG Traversal",
       "description": "Multi-hop graph traversal resolves defect provenance chains and produces grounded answers.",
       "status": "GREEN",
-      "verified_commit": "pending-run-02",
+      "verified_commit": "4b087bd",
       "tests": ["tests/test-graph.py"]
     },
     "G8": {
@@ -60,22 +60,22 @@
     "G9": {
       "name": "Grounding and Abstention",
       "description": "Retriever/generator verifies evidence support and abstains safely on ungrounded or out-of-domain queries.",
-      "status": "PENDING",
-      "verified_commit": null,
+      "status": "GREEN",
+      "verified_commit": "pending-run-03",
       "tests": ["tests/test-guardrails.py"]
     },
     "G10": {
       "name": "Prompt Injection Defense (Direct & Indirect)",
       "description": "Reproduces pirate direct & indirect prompt injection in vulnerable mode and reliably blocks in hardened mode.",
-      "status": "PENDING",
-      "verified_commit": null,
+      "status": "GREEN",
+      "verified_commit": "pending-run-03",
       "tests": ["tests/test-guardrails.py"]
     },
     "G11": {
       "name": "Scope Boundaries & Usage Budgets",
       "description": "Blocks off-topic coding tutor queries (recursion, Hello World) and enforces per-session token budgets.",
-      "status": "PENDING",
-      "verified_commit": null,
+      "status": "GREEN",
+      "verified_commit": "pending-run-03",
       "tests": ["tests/test-guardrails.py"]
     },
     "G12": {

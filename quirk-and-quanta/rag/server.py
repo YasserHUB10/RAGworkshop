@@ -4,7 +4,7 @@ Quirk & Quanta - Unified Storefront & RAG API Server
 Zero external dependencies (uses standard library http.server).
 Serves static storefront assets from site/ and provides live JSON endpoints:
 - POST /api/rag/retrieve (Multi-strategy Retrieval: Vector, BM25, Hybrid)
-- POST /api/rag/ask      (Full grounded RAG pipeline, including GraphRAG)
+- POST /api/rag/ask      (Full grounded RAG pipeline with Guardrails)
 - POST /api/rag/compare  (Side-by-side Vector vs BM25 vs Hybrid comparison)
 - POST /api/rag/graph    (Multi-hop Knowledge Graph defect investigation)
 - GET  /api/rag/status   (System health & model telemetry)
@@ -79,9 +79,9 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     "ENABLE_GRAPH_NEO4J": False,
                     "ENABLE_GENERATION": True,
                     "ENABLE_GROUNDING": True,
-                    "ENABLE_PROMPT_INJECTION_DEFENSE": False,
+                    "ENABLE_PROMPT_INJECTION_DEFENSE": True,
                     "ENABLE_RBAC": True,
-                    "ENABLE_USAGE_LIMITS": False,
+                    "ENABLE_USAGE_LIMITS": True,
                     "ENABLE_OBSERVABILITY": False,
                     "ENABLE_RECORDED_DEMOS": True
                 },
@@ -130,6 +130,8 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         strategy = params.get("strategy", "semantic")
         method = params.get("method", "auto")
         role = params.get("role", "customer")
+        hardened = bool(params.get("hardened", True))
+        session_id = params.get("sessionId", "workshop_session")
         api_key = os.environ.get("GEMINI_API_KEY")
 
         if path == "/api/rag/retrieve":
@@ -143,7 +145,9 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 method=method,
                 role=role,
                 retrieval_only=True,
-                api_key=api_key
+                api_key=api_key,
+                hardened=hardened,
+                session_id=session_id
             )
             self._send_json(result)
             return
@@ -159,7 +163,9 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 method=method,
                 role=role,
                 retrieval_only=False,
-                api_key=api_key
+                api_key=api_key,
+                hardened=hardened,
+                session_id=session_id
             )
             self._send_json(result)
             return

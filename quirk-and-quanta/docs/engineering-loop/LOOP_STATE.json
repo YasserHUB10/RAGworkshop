@@ -1,12 +1,12 @@
 {
-  "current_iteration": 2,
+  "current_iteration": 3,
   "max_iterations": 8,
   "status": "IN_PROGRESS",
-  "active_track": "P0-C",
-  "selected_target": "Film-Aligned Defect Scenario & Local GraphRAG",
-  "last_completed_iteration": 1,
+  "active_track": "P0-E",
+  "selected_target": "Grounding, Abstention, Scope Boundaries & Pirate Prompt Injections",
+  "last_completed_iteration": 2,
   "baseline_commit": "c649390",
-  "current_commit": "b01ddae",
+  "current_commit": "4b087bd",
   "iterations_summary": [
     {
       "iteration": 1,
@@ -17,6 +17,16 @@
       "tests_passed": 23,
       "tests_failed": 0,
       "hit_rate_improvement": "54.5% (Vector) -> 68.2% (BM25) / 59.1% (Hybrid)"
+    },
+    {
+      "iteration": 2,
+      "track": "P0-C",
+      "status": "GREEN",
+      "commit": "4b087bd",
+      "gates_passed": ["G6", "G7"],
+      "tests_passed": 30,
+      "tests_failed": 0,
+      "defect_resolution": "COMP-025, SUP-008, BATCH-VREG-2026, REC-VREG-01 resolved in 0.08ms"
     }
   ]
 }

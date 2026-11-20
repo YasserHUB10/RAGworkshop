@@ -261,12 +261,15 @@ function renderComparison(data) {
 }
 
 function jsonPayload(question, topK, strategy, role, method) {
+  const hardenedCheck = document.getElementById('hardened-mode-checkbox');
+  const isHardened = hardenedCheck ? hardenedCheck.checked : true;
   return JSON.stringify({
     question: question,
     topK: topK,
     strategy: strategy,
     role: role,
-    method: method || 'auto'
+    method: method || 'auto',
+    hardened: isHardened
   });
 }
 
@@ -289,12 +292,26 @@ function renderResults(data, retrievalOnly) {
   if (timeGen) timeGen.textContent = `${lat.generationMs || 0} ms`;
   if (timeTotal) timeTotal.textContent = `${lat.totalMs || 0} ms`;
 
-  // Mode Badge
+  // Mode Badge & Guardrail Alerts
   if (modeBadge) {
-    const isLive = data.executionMode === 'live_gemini';
-    const methodTag = (data.retrievalMethod || 'vector').toUpperCase();
-    modeBadge.textContent = isLive ? `Live Gemini (${methodTag})` : `Reference Synthesizer (${methodTag})`;
-    modeBadge.className = isLive ? 'badge badge-success' : 'badge badge-navy';
+    if (data.guardrailAction === 'REJECT_INJECTION') {
+      modeBadge.textContent = '🛡️ Prompt Injection Blocked';
+      modeBadge.className = 'badge badge-danger';
+    } else if (data.guardrailAction === 'REJECT_OFF_TOPIC') {
+      modeBadge.textContent = '🔬 Scope Boundary Enforced (Coding Blocked)';
+      modeBadge.className = 'badge badge-gold';
+    } else if (data.guardrailAction === 'ABSTAIN_UNGROUNDED') {
+      modeBadge.textContent = 'ℹ️ Grounded Abstention Triggered';
+      modeBadge.className = 'badge badge-navy';
+    } else if (data.guardrailAction === 'VULNERABLE_OVERRIDE_SIMULATED') {
+      modeBadge.textContent = '🏴‍☠️ Vulnerable Persona Override (Demo)';
+      modeBadge.className = 'badge badge-danger';
+    } else {
+      const isLive = data.executionMode === 'live_gemini';
+      const methodTag = (data.retrievalMethod || 'vector').toUpperCase();
+      modeBadge.textContent = isLive ? `Live Gemini (${methodTag})` : `Reference Synthesizer (${methodTag})`;
+      modeBadge.className = isLive ? 'badge badge-success' : 'badge badge-navy';
+    }
   }
 
   // Graph Path Visualization
