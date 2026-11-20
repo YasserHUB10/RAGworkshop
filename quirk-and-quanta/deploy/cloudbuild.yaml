@@ -8,7 +8,7 @@ steps:
     args:
       - 'build'
       - '-t'
-      - 'asia-south1-docker.pkg.dev/idc-rag-proj/quirk-quanta/rag-service:$SHORT_SHA'
+      - 'asia-south1-docker.pkg.dev/idc-rag-proj/quirk-quanta/rag-service:$_TAG'
       - '-t'
       - 'asia-south1-docker.pkg.dev/idc-rag-proj/quirk-quanta/rag-service:latest'
       - '-f'
@@ -19,7 +19,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'asia-south1-docker.pkg.dev/idc-rag-proj/quirk-quanta/rag-service:$SHORT_SHA'
+      - 'asia-south1-docker.pkg.dev/idc-rag-proj/quirk-quanta/rag-service:$_TAG'
 
   - name: 'gcr.io/cloud-builders/docker'
     args:
@@ -34,7 +34,7 @@ steps:
       - 'deploy'
       - 'quirk-quanta-rag'
       - '--image'
-      - 'asia-south1-docker.pkg.dev/idc-rag-proj/quirk-quanta/rag-service:$SHORT_SHA'
+      - 'asia-south1-docker.pkg.dev/idc-rag-proj/quirk-quanta/rag-service:$_TAG'
       - '--region'
       - 'asia-south1'
       - '--project'
@@ -64,8 +64,11 @@ steps:
       - 'QUIRK_AUTH_SECRET=quirk-quanta-auth-secret:latest,PRESENTER_TOKEN=quirk-quanta-presenter-token:latest'
 
 images:
-  - 'asia-south1-docker.pkg.dev/idc-rag-proj/quirk-quanta/rag-service:$SHORT_SHA'
+  - 'asia-south1-docker.pkg.dev/idc-rag-proj/quirk-quanta/rag-service:$_TAG'
   - 'asia-south1-docker.pkg.dev/idc-rag-proj/quirk-quanta/rag-service:latest'
+
+substitutions:
+  _TAG: 'latest'
 
 options:
   logging: CLOUD_LOGGING_ONLY
