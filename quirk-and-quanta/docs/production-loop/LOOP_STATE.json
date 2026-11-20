@@ -1,10 +1,10 @@
 {
-  "current_iteration": 3,
+  "current_iteration": 4,
   "max_iterations": 8,
   "status": "IN_PROGRESS",
-  "active_milestone": "Iteration 3: Firebase Hosting Integration, Reverse Proxy Routing & CDN Caching (Gates P03, P05)",
+  "active_milestone": "Iteration 4: Secrets, Authentication & Demonstration Safety Isolation (Gates P06, P07, P08)",
   "baseline_commit": "0c83696",
-  "current_commit": "bf7c09b",
+  "current_commit": "029a950",
   "gcp_project": "momence-support-agent",
   "region": "asia-south1",
   "cloud_run_service": "quirk-quanta-rag",
@@ -27,8 +27,15 @@
       "iteration": 3,
       "gate": "P03, P05",
       "verdict": "GREEN",
-      "commit": "pending-iter-03",
+      "commit": "029a950",
       "summary": "Created firebase.json, .firebaserc, deploy_firebase.sh, and verified edge proxy rewrites and cache headers with verify_firebase_routing.py."
+    },
+    {
+      "iteration": 4,
+      "gate": "P06, P07, P08",
+      "verdict": "GREEN",
+      "commit": "pending-iter-04",
+      "summary": "Validated HMAC-SHA256 token integrity, server-side RBAC demotion, IDOR access controls, and prompt injection demo isolation."
     }
   ]
 }

@@ -22,7 +22,7 @@
       "name": "Firebase Hosting Public URL Functional",
       "description": "Firebase Hosting configured with single public domain routing static assets and /api/** rewrites to Cloud Run.",
       "status": "GREEN_LOCALLY_VERIFIED",
-      "verified_commit": "pending-iter-03"
+      "verified_commit": "029a950"
     },
     "P04": {
       "name": "All Storefront Pages and Assets Functional",
@@ -34,25 +34,25 @@
       "name": "API Routing Works End-to-End",
       "description": "Same-origin /api/** rewrites through Firebase Hosting proxy reach Cloud Run and return valid responses within proxy timeouts.",
       "status": "GREEN",
-      "verified_commit": "pending-iter-03"
+      "verified_commit": "029a950"
     },
     "P06": {
       "name": "Secrets Managed Securely",
       "description": "No API keys in Git or client JavaScript; runtime secrets managed securely; audit logging clean.",
-      "status": "PENDING",
-      "verified_commit": null
+      "status": "GREEN",
+      "verified_commit": "pending-iter-04"
     },
     "P07": {
       "name": "Backend Authentication & RBAC Hardened",
       "description": "Server HTTP boundary enforces HMAC-SHA256 signature verification; client role tampering demoted.",
-      "status": "PENDING",
-      "verified_commit": null
+      "status": "GREEN",
+      "verified_commit": "pending-iter-04"
     },
     "P08": {
       "name": "No Publicly Exploitable Demonstration Endpoints",
       "description": "Intentionally vulnerable demo modes safely isolated; public endpoints cannot disable server authorization.",
-      "status": "PENDING",
-      "verified_commit": null
+      "status": "GREEN",
+      "verified_commit": "pending-iter-04"
     },
     "P09": {
       "name": "Genuine Live Gemini Inference Verified",
