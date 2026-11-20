@@ -4,9 +4,11 @@ Quirk & Quanta - Unified Storefront & RAG API Server
 Zero external dependencies (uses standard library http.server).
 Serves static storefront assets from site/ and provides live JSON endpoints:
 - POST /api/rag/retrieve (Multi-strategy Retrieval: Vector, BM25, Hybrid)
-- POST /api/rag/ask      (Full grounded RAG pipeline with Guardrails)
+- POST /api/rag/ask      (Full grounded RAG pipeline with Guardrails & Server RBAC)
 - POST /api/rag/compare  (Side-by-side Vector vs BM25 vs Hybrid comparison)
 - POST /api/rag/graph    (Multi-hop Knowledge Graph defect investigation)
+- POST /api/rag/doc      (Direct Document Access with IDOR protection)
+- GET  /api/rag/auth/demo-token (Generates authentic signed HMAC bearer token)
 - GET  /api/rag/status   (System health & model telemetry)
 - GET  /api/rag/questions (Curated golden evaluation questions)
 - GET  /api/rag/telemetry (Chunking strategy statistics)
@@ -23,12 +25,14 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE_DIR = os.path.join(ROOT_DIR, "site")
 EVAL_DIR = os.path.join(ROOT_DIR, "data", "evaluation")
 CHUNKS_DIR = os.path.join(ROOT_DIR, "data", "chunks")
+CORPUS_DIR = os.path.join(ROOT_DIR, "data", "corpus")
 
 if ROOT_DIR not in sys.path:
     sys.path.append(ROOT_DIR)
 
 from rag.pipeline import RAGPipeline
 from rag.graph_local import get_graph
+from rag.auth import create_signed_token, resolve_effective_role, check_resource_access
 
 pipeline = RAGPipeline(default_strategy="semantic")
 graph = get_graph()
@@ -91,6 +95,18 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             })
             return
 
+        elif path == "/api/rag/auth/demo-token":
+            # Issues authentic demo admin session token for workshop presenters
+            token = create_signed_token(role="admin", user_id="dr_arthur")
+            self._send_json({
+                "role": "admin",
+                "userId": "dr_arthur",
+                "token": token,
+                "type": "Bearer",
+                "note": "Use in Authorization header 'Bearer <token>' or authToken parameter to authenticate as Admin."
+            })
+            return
+
         elif path == "/api/rag/questions":
             golden_path = os.path.join(EVAL_DIR, "golden_dataset.json")
             if os.path.exists(golden_path):
@@ -125,6 +141,12 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self._send_json({"error": "Invalid JSON in request body"}, status=400)
             return
 
+        # Extract Auth Bearer header or JSON token
+        auth_header = self.headers.get("Authorization", "")
+        auth_token = params.get("authToken")
+        if not auth_token and auth_header.startswith("Bearer "):
+            auth_token = auth_header[7:].strip()
+
         question = params.get("question", "").strip()
         top_k = int(params.get("topK", 5))
         strategy = params.get("strategy", "semantic")
@@ -133,6 +155,13 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         hardened = bool(params.get("hardened", True))
         session_id = params.get("sessionId", "workshop_session")
         api_key = os.environ.get("GEMINI_API_KEY")
+
+        # Resolve effective role at the server HTTP boundary
+        effective_role, was_tampered, auth_msg = resolve_effective_role(
+            requested_role=role,
+            auth_token=auth_token,
+            hardened=hardened
+        )
 
         if path == "/api/rag/retrieve":
             if not question:
@@ -143,12 +172,19 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 top_k=top_k,
                 strategy=strategy,
                 method=method,
-                role=role,
+                role=effective_role,
+                auth_token=auth_token,
                 retrieval_only=True,
                 api_key=api_key,
                 hardened=hardened,
                 session_id=session_id
             )
+            result["roleResolution"] = {
+                "requestedRole": role,
+                "effectiveRole": effective_role,
+                "wasTampered": was_tampered,
+                "authMessage": auth_msg
+            }
             self._send_json(result)
             return
 
@@ -161,9 +197,21 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 top_k=top_k,
                 strategy=strategy,
                 method=method,
-                role=role,
+                role=effective_role,
+                auth_token=auth_token,
                 retrieval_only=False,
                 api_key=api_key,
+                hardened=hardened,
+                session_id=session_id
+            )
+            result["roleResolution"] = {
+                "requestedRole": role,
+                "effectiveRole": effective_role,
+                "wasTampered": was_tampered,
+                "authMessage": auth_msg
+            }
+            self._send_json(result)
+            return
                 hardened=hardened,
                 session_id=session_id
             )
@@ -195,6 +243,70 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self._send_json(result)
             return
 
+        elif path == "/api/rag/doc":
+            # IDOR Inspection endpoint (Demo 16)
+            doc_id = params.get("docId", "")
+            if not doc_id:
+                self._send_json({"error": "Field 'docId' is required"}, status=400)
+                return
+
+            # Determine resource classification
+            is_internal = "PROC" in doc_id or "INTERNAL" in doc_id
+            access_level = "internal_procurement" if is_internal else "public"
+
+            effective_role, was_tampered, auth_msg = resolve_effective_role(
+                requested_role=role,
+                auth_token=auth_token,
+                hardened=hardened
+            )
+
+            # Check access
+            allowed, access_msg = check_resource_access(doc_id, effective_role, access_level)
+
+            if not allowed:
+                self._send_json({
+                    "error": "Forbidden",
+                    "status": 403,
+                    "docId": doc_id,
+                    "accessLevel": access_level,
+                    "requestedRole": role,
+                    "effectiveRole": effective_role,
+                    "wasTampered": was_tampered,
+                    "securityAlert": access_msg
+                }, status=403)
+                return
+
+            # If allowed, fetch document text from corpus
+            doc_path = os.path.join(CORPUS_DIR, f"{doc_id}.json")
+            if not os.path.exists(doc_path):
+                # Check with prefix DOC-
+                alt_path = os.path.join(CORPUS_DIR, f"DOC-{doc_id}.json")
+                if os.path.exists(alt_path):
+                    doc_path = alt_path
+
+            doc_content = None
+            if os.path.exists(doc_path):
+                with open(doc_path, "r", encoding="utf-8") as f:
+                    doc_content = json.load(f)
+            else:
+                doc_content = {
+                    "docId": doc_id,
+                    "title": f"Dossier {doc_id}",
+                    "accessLevel": access_level,
+                    "text": f"Confidential supplier contract and procurement margin records for {doc_id}."
+                }
+
+            self._send_json({
+                "status": 200,
+                "docId": doc_id,
+                "accessLevel": access_level,
+                "effectiveRole": effective_role,
+                "wasTampered": was_tampered,
+                "authMessage": auth_msg,
+                "document": doc_content
+            })
+            return
+
         self._send_json({"error": f"Endpoint not found: {path}"}, status=404)
 
 def run_server(port=8000):
@@ -211,6 +323,8 @@ def run_server(port=8000):
         print(f"  - POST http://localhost:{port}/api/rag/ask")
         print(f"  - POST http://localhost:{port}/api/rag/compare")
         print(f"  - POST http://localhost:{port}/api/rag/graph")
+        print(f"  - POST http://localhost:{port}/api/rag/doc")
+        print(f"  - GET  http://localhost:{port}/api/rag/auth/demo-token")
         print(f"  - GET  http://localhost:{port}/api/rag/status")
         print(f"  - GET  http://localhost:{port}/api/rag/questions")
         print(f"  - GET  http://localhost:{port}/api/rag/telemetry")

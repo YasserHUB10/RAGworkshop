@@ -2,7 +2,7 @@
 Quirk & Quanta - End-to-End RAG Pipeline Coordinator
 Executes query embedding, multi-strategy retrieval (Vector, BM25, Hybrid),
 Knowledge Graph multi-hop traversal (GraphRAG), multi-layer Guardrails,
-RBAC enforcement, and grounded answer generation with latency telemetry.
+Cryptographic Server-Side RBAC Enforcement, and grounded answer generation.
 """
 
 import os
@@ -13,6 +13,7 @@ from .retriever import QuirkRetriever
 from .generator import generate_grounded_answer
 from .graph_local import get_graph
 from .guardrails import get_guardrails
+from .auth import resolve_effective_role, check_resource_access
 
 class RAGPipeline:
     def __init__(self, default_strategy: str = "semantic"):
@@ -27,6 +28,7 @@ class RAGPipeline:
         strategy: str = "semantic",
         method: str = "auto",
         role: str = "customer",
+        auth_token: Optional[str] = None,
         retrieval_only: bool = False,
         api_key: Optional[str] = None,
         hardened: bool = True,
@@ -34,21 +36,42 @@ class RAGPipeline:
     ) -> Dict[str, Any]:
         """
         Executes the full RAG pipeline across Vector, BM25, Hybrid, or Graph methods
-        with active guardrails, grounding verification, and prompt injection defense.
+        with active server-side RBAC token verification, guardrails, and grounding.
         """
         pipeline_start = time.perf_counter()
+
+        # Step 0: Server-Side RBAC Authentication Check
+        if auth_token is not None:
+            effective_role, was_tampered, auth_msg = resolve_effective_role(
+                requested_role=role,
+                auth_token=auth_token,
+                hardened=hardened
+            )
+        else:
+            effective_role = role
+            was_tampered = False
+            auth_msg = f"Role '{role}' passed."
+
+        role_telemetry = {
+            "requestedRole": role,
+            "effectiveRole": effective_role,
+            "wasTampered": was_tampered,
+            "authMessage": auth_msg
+        }
 
         # Check if GraphRAG method requested
         effective_method = method.lower()
         if strategy.lower() == "graph" or effective_method == "graph":
-            return self.ask_graph(question, role=role)
+            res = self.ask_graph(question, role=effective_role)
+            res["roleResolution"] = role_telemetry
+            return res
 
-        # Step 1 & 2: Multi-Strategy Retrieval
+        # Step 1 & 2: Multi-Strategy Retrieval with Enforced Effective Role
         retrieval_result = self.retriever.retrieve(
             query=question,
             top_k=top_k,
             strategy=strategy,
-            role=role,
+            role=effective_role,
             method=method,
             api_key=api_key
         )
@@ -66,12 +89,13 @@ class RAGPipeline:
         )
         guard_ms = round((time.perf_counter() - guard_start) * 1000, 2)
 
-        # Handle Guardrail interventions (Refusal, Abstention, or Simulated Vulnerability)
+        # Handle Guardrail interventions
         if guard_res["action"] != "PROCEED":
             total_ms = round((time.perf_counter() - pipeline_start) * 1000, 2)
             return {
                 "question": question,
-                "role": role,
+                "role": effective_role,
+                "roleResolution": role_telemetry,
                 "strategy": retrieval_result.get("strategy", strategy),
                 "retrievalMethod": retrieval_result.get("retrievalMethod", method),
                 "topK": top_k,
@@ -100,6 +124,7 @@ class RAGPipeline:
             retrieval_result["latency"]["totalMs"] = total_ms
             retrieval_result["latency"]["guardrailMs"] = guard_ms
             retrieval_result["retrievalOnly"] = True
+            retrieval_result["roleResolution"] = role_telemetry
             retrieval_result["hardened"] = hardened
             retrieval_result["guardrailAction"] = "PASSED"
             retrieval_result["answer"] = None
@@ -110,7 +135,7 @@ class RAGPipeline:
         gen_result = generate_grounded_answer(
             query=question,
             evidence=sanitized_evidence,
-            role=role,
+            role=effective_role,
             api_key=api_key
         )
 
@@ -118,7 +143,8 @@ class RAGPipeline:
 
         return {
             "question": question,
-            "role": role,
+            "role": effective_role,
+            "roleResolution": role_telemetry,
             "strategy": retrieval_result.get("strategy", strategy),
             "retrievalMethod": retrieval_result.get("retrievalMethod", method),
             "topK": top_k,

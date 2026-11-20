@@ -6,6 +6,7 @@
 
 let goldenQuestions = [];
 let isServerActive = false;
+let activeAuthToken = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   initWorkshop();
@@ -18,6 +19,36 @@ async function initWorkshop() {
 }
 
 function setupControls() {
+  const btnToken = document.getElementById('btn-get-token');
+  const tokenLabel = document.getElementById('token-status-label');
+  if (btnToken) {
+    btnToken.addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/rag/auth/demo-token');
+        if (res.ok) {
+          const data = await res.json();
+          activeAuthToken = data.token;
+          if (tokenLabel) {
+            tokenLabel.textContent = `🟢 Signed Bearer Token Active (${data.userId})`;
+            tokenLabel.style.color = '#059669';
+            tokenLabel.style.fontWeight = 'bold';
+          }
+          const roleSelect = document.getElementById('role-select');
+          if (roleSelect) roleSelect.value = 'admin';
+          alert('Issued valid HMAC-SHA256 bearer token for Administrator (dr_arthur)!');
+        }
+      } catch (e) {
+        console.error('Failed to get token:', e);
+      }
+    });
+  }
+
+  const btnIdor = document.getElementById('btn-test-idor');
+  if (btnIdor) {
+    btnIdor.addEventListener('click', async () => {
+      executeIdorTest();
+    });
+  }
   const topKSlider = document.getElementById('top-k-slider');
   const topKVal = document.getElementById('top-k-val');
   if (topKSlider && topKVal) {
@@ -269,8 +300,37 @@ function jsonPayload(question, topK, strategy, role, method) {
     strategy: strategy,
     role: role,
     method: method || 'auto',
-    hardened: isHardened
+    hardened: isHardened,
+    authToken: activeAuthToken
   });
+}
+
+async function executeIdorTest() {
+  const roleSelect = document.getElementById('role-select');
+  const hardenedCheck = document.getElementById('hardened-mode-checkbox');
+  const role = roleSelect ? roleSelect.value : 'customer';
+  const isHardened = hardenedCheck ? hardenedCheck.checked : true;
+
+  try {
+    const res = await fetch('/api/rag/doc', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        docId: 'PROC-QQ-0001',
+        role: role,
+        hardened: isHardened,
+        authToken: activeAuthToken
+      })
+    });
+    const data = await res.json();
+    if (res.status === 403) {
+      alert(`🛡️ IDOR ACCESS BLOCKED (403 Forbidden):\n\n${data.securityAlert}\nRequested Role: ${data.requestedRole} -> Effective Role: ${data.effectiveRole}\nRole Tampered: ${data.wasTampered}`);
+    } else {
+      alert(`⚠️ IDOR ACCESS GRANTED (Status ${res.status}):\n\nFetched Confidential Document: ${data.docId}\nEffective Role: ${data.effectiveRole}\n${JSON.stringify(data.document, null, 2)}`);
+    }
+  } catch (err) {
+    alert('Error testing IDOR: ' + err.message);
+  }
 }
 
 function renderResults(data, retrievalOnly) {

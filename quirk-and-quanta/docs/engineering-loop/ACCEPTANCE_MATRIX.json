@@ -61,35 +61,35 @@
       "name": "Grounding and Abstention",
       "description": "Retriever/generator verifies evidence support and abstains safely on ungrounded or out-of-domain queries.",
       "status": "GREEN",
-      "verified_commit": "pending-run-03",
+      "verified_commit": "fb0baff",
       "tests": ["tests/test-guardrails.py"]
     },
     "G10": {
       "name": "Prompt Injection Defense (Direct & Indirect)",
       "description": "Reproduces pirate direct & indirect prompt injection in vulnerable mode and reliably blocks in hardened mode.",
       "status": "GREEN",
-      "verified_commit": "pending-run-03",
+      "verified_commit": "fb0baff",
       "tests": ["tests/test-guardrails.py"]
     },
     "G11": {
       "name": "Scope Boundaries & Usage Budgets",
       "description": "Blocks off-topic coding tutor queries (recursion, Hello World) and enforces per-session token budgets.",
       "status": "GREEN",
-      "verified_commit": "pending-run-03",
+      "verified_commit": "fb0baff",
       "tests": ["tests/test-guardrails.py"]
     },
     "G12": {
       "name": "Server-Side RBAC Enforcement",
       "description": "Confidential cost and procurement data protected by server-side cryptographic/session role enforcement.",
-      "status": "PENDING",
-      "verified_commit": null,
+      "status": "GREEN",
+      "verified_commit": "pending-run-04",
       "tests": ["tests/test-security.py"]
     },
     "G13": {
       "name": "IDOR & Role Tampering Defense",
       "description": "Client role parameter manipulation and direct object reference traversal rejected in hardened mode.",
-      "status": "PENDING",
-      "verified_commit": null,
+      "status": "GREEN",
+      "verified_commit": "pending-run-04",
       "tests": ["tests/test-security.py"]
     },
     "G14": {
