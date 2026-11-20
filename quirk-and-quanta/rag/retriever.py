@@ -265,6 +265,7 @@ class QuirkRetriever:
             "bm25Top1": bm25_res["evidence"][0]["chunkId"] if bm25_res["evidence"] else None,
             "latency": {
                 "embeddingMs": vec_res["latency"]["embeddingMs"],
+                "retrievalMs": total_time_ms,
                 "vectorRetrievalMs": vec_res["latency"]["retrievalMs"],
                 "bm25RetrievalMs": bm25_res["latency"]["retrievalMs"],
                 "fusionMs": fuse_ms,

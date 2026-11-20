@@ -53,8 +53,8 @@
     "G8": {
       "name": "Golden Evaluations & Comparative Metrics",
       "description": "Automated evaluation harness produces empirical metrics (Hit Rate, MRR, Precision, Recall, Latency) across strategies.",
-      "status": "PENDING",
-      "verified_commit": null,
+      "status": "GREEN",
+      "verified_commit": "pending-run-06",
       "tests": ["scripts/run_evaluations.py"]
     },
     "G9": {
@@ -96,7 +96,7 @@
       "name": "Observability & Request Tracing",
       "description": "Structured execution traces with request ID, latency breakdown, token usage, and simulated cost attribution.",
       "status": "GREEN",
-      "verified_commit": "pending-run-05",
+      "verified_commit": "fa8e05d",
       "tests": ["tests/test-observability.py"]
     },
     "G15": {

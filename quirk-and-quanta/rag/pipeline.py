@@ -96,7 +96,8 @@ class RAGPipeline:
         )
 
         evidence = retrieval_result["evidence"]
-        trace.add_span("retrieval", retrieval_result["latency"]["retrievalMs"], {
+        ret_ms = retrieval_result.get("latency", {}).get("retrievalMs") or retrieval_result.get("latency", {}).get("totalMs", 0.0)
+        trace.add_span("retrieval", ret_ms, {
             "method": retrieval_result.get("retrievalMethod", method),
             "evidenceCount": len(evidence)
         })
