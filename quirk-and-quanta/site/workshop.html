@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workshop Lab: RAG Exploration Bench | Quirk &amp; Quanta</title>
+  <meta name="description" content="IDC Masterclass Workshop Lab: Explore Vanilla RAG, multi-strategy chunking, vector similarity, and citation evidence.">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    .workshop-grid {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+    @media (max-width: 960px) {
+      .workshop-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .lab-panel {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+    .lab-panel-title {
+      font-size: 1.125rem;
+      font-weight: 800;
+      color: var(--color-navy);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .form-group {
+      margin-bottom: 18px;
+    }
+    .form-label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: var(--color-navy);
+      margin-bottom: 6px;
+    }
+    .form-select, .form-textarea, .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      background: #FFFFFF;
+      color: var(--color-text-main);
+    }
+    .form-select:focus, .form-textarea:focus, .form-input:focus {
+      outline: none;
+      border-color: var(--color-teal);
+      box-shadow: 0 0 0 3px rgba(21, 141, 137, 0.15);
+    }
+    .telemetry-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      background: var(--color-bg);
+      padding: 12px 16px;
+      border-radius: 6px;
+      border: 1px solid var(--color-border);
+      margin-bottom: 20px;
+    }
+    .telemetry-item {
+      font-size: 0.8125rem;
+      color: var(--color-text-muted);
+    }
+    .telemetry-item strong {
+      color: var(--color-navy);
+    }
+    .evidence-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .evidence-card:hover {
+      border-color: var(--color-teal);
+      box-shadow: var(--shadow-md);
+    }
+    .evidence-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .score-meter {
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: #E6FFFA;
+      color: #234E52;
+      border: 1px solid #B2F5EA;
+    }
+    .chunk-id-tag {
+      font-family: ui-monospace, monospace;
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+    }
+    .evidence-text {
+      font-size: 0.875rem;
+      line-height: 1.6;
+      color: var(--color-text-main);
+      background: #F8FAFC;
+      padding: 12px;
+      border-radius: 4px;
+      border-left: 3px solid var(--color-teal);
+      white-space: pre-wrap;
+      font-family: inherit;
+    }
+    .answer-card {
+      background: #F0FDFA;
+      border: 1px solid #99F6E4;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .answer-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #0F766E;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .answer-body {
+      font-size: 0.9375rem;
+      line-height: 1.7;
+      color: #115E59;
+    }
+    .citation-pill {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: #CCFBF1;
+      color: #0F766E;
+      margin-right: 6px;
+      text-decoration: none;
+      border: 1px solid #5EEAD4;
+    }
+    .citation-pill:hover {
+      background: #99F6E4;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <div class="announcement-bar">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+      <div class="announcement-bar-content">
+        <span class="announcement-ticker">
+          <span class="announcement-ticker-icon">🧪</span>
+          <span>IDC Workshop Lab: Gate 2 Vanilla RAG &bull; Chunking &bull; Vector Similarity</span>
+        </span>
+      </div>
+      <div class="announcement-bar-links">
+        <a href="products.html">All 100 Products</a>
+        <a href="about.html">Fictional Lore</a>
+        <span style="color: var(--color-gold);">Model: gemini-embedding-001 (768-D)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Sticky Header -->
+  <header class="site-header">
+    <div class="container">
+      <div class="header-main">
+        <!-- Logo -->
+        <a href="index.html" class="header-brand" aria-label="Quirk &amp; Quanta Home">
+          <img src="assets/logo.svg" alt="Quirk &amp; Quanta Logo" class="header-logo-img">
+        </a>
+
+        <!-- Global Search Bar -->
+        <div class="header-search">
+          <form id="global-search-form" class="search-input-wrapper">
+            <input type="text" 
+                   id="global-search-input" 
+                   class="search-input" 
+                   placeholder="Search 100 peer-reviewed items by SKU, concept, or formula..." 
+                   autocomplete="off"
+                   aria-label="Search catalog">
+            <button type="submit" class="search-btn" aria-label="Submit search">Search</button>
+          </form>
+          <div id="search-dropdown" class="search-results-dropdown"></div>
+        </div>
+
+        <!-- Header Actions -->
+        <div class="header-actions">
+          <button id="role-toggle-btn" class="role-badge-toggle" title="Switch Demonstration Role Preview">
+            <span>👤</span> Role: Customer
+          </button>
+          <a href="products.html" class="header-action-btn" title="View Wishlist">
+            <span>♥</span>
+            <span class="badge-count" id="header-wishlist-count">0</span>
+          </a>
+          <button id="header-cart-btn" class="header-action-btn" title="Open Shopping Cart">
+            <span>🛒</span>
+            <span>Cart</span>
+            <span class="badge-count" id="header-cart-count">0</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Navigation Sub-bar -->
+    <nav class="header-nav" aria-label="Category navigation">
+      <div class="container">
+        <ul class="header-nav-list">
+          <li><a href="products.html" class="header-nav-link">All 100 Products</a></li>
+          <li><a href="products.html?category=CAT-APPAREL" class="header-nav-link">Apparel</a></li>
+          <li><a href="products.html?category=CAT-DESK" class="header-nav-link">Desk &amp; Office</a></li>
+          <li><a href="products.html?category=CAT-KITCHEN" class="header-nav-link">Drinkware &amp; Kitchen</a></li>
+          <li><a href="products.html?category=CAT-HOME" class="header-nav-link">Home &amp; Decor</a></li>
+          <li><a href="products.html?category=CAT-GADGETS" class="header-nav-link">Science Gadgets</a></li>
+          <li><a href="products.html?category=CAT-PUZZLES" class="header-nav-link">Puzzles &amp; Games</a></li>
+          <li><a href="products.html?category=CAT-STATIONERY" class="header-nav-link">Stationery &amp; Learning</a></li>
+          <li><a href="products.html?category=CAT-TECH" class="header-nav-link">Tech Accessories</a></li>
+          <li><a href="products.html?category=CAT-RAILWAY" class="header-nav-link">Railway &amp; Engineering</a></li>
+          <li><a href="products.html?category=CAT-GIFTS" class="header-nav-link">Gifts &amp; Collectibles</a></li>
+          <li><a href="workshop.html" class="header-nav-link active" style="color: var(--color-gold); font-weight: 800;">🧪 Workshop Lab</a></li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Page Header -->
+  <div style="background: var(--color-navy); color: #FFFFFF; padding: 28px 0; border-bottom: 3px solid var(--color-gold);">
+    <div class="container">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <span class="badge badge-gold" style="margin-bottom: 8px;">Workshop Module: Gate 2</span>
+          <h1 style="font-size: 1.875rem; font-weight: 900; color: #FFFFFF; margin-bottom: 4px;">
+            RAG Exploration &amp; Retrieval Bench
+          </h1>
+          <p style="font-size: 0.875rem; color: rgba(255,255,255,0.8); margin: 0;">
+            Inspect dense vector similarity, multi-strategy chunking, citation mapping, and RBAC authorization boundaries.
+          </p>
+        </div>
+        <div id="backend-status-pill" class="badge badge-teal" style="font-size: 0.8125rem; padding: 6px 14px;">
+          Checking RAG Engine...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Workshop Lab Section -->
+  <main class="section" style="padding-top: 28px;">
+    <div class="container">
+      
+      <div class="workshop-grid">
+        
+        <!-- Left Column: Experiment Controls -->
+        <aside class="lab-panel">
+          <h2 class="lab-panel-title">
+            <span>⚙️</span> Retrieval Controls
+          </h2>
+
+          <!-- Golden Question Selector -->
+          <div class="form-group">
+            <label class="form-label" for="question-preset-select">Curated Workshop Questions (Golden Dataset)</label>
+            <select id="question-preset-select" class="form-select">
+              <option value="">-- Choose a test case (22 curated) --</option>
+            </select>
+          </div>
+
+          <!-- Question Input Box -->
+          <div class="form-group">
+            <label class="form-label" for="user-question-input">Natural Language Query</label>
+            <textarea id="user-question-input" 
+                      class="form-textarea" 
+                      rows="3" 
+                      placeholder="Type a product question, SKU (e.g. QQ-0015), or concept..."></textarea>
+          </div>
+
+          <!-- Chunking Strategy Selector -->
+          <div class="form-group">
+            <label class="form-label" for="strategy-select">Chunking Strategy</label>
+            <select id="strategy-select" class="form-select">
+              <option value="semantic" selected>Semantic / Structural (H2 &amp; Markdown sections - 1,623 chunks)</option>
+              <option value="fixed">Fixed-Size (450 chars, word-bounded - 1,181 chunks)</option>
+              <option value="sliding">Sliding-Window (450 chars / 150 overlap - 1,512 chunks)</option>
+            </select>
+            <div style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 4px;">
+              Configured embedding model: <code>gemini-embedding-001</code> (768-D).
+            </div>
+          </div>
+
+          <!-- Top-K Selector -->
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <label class="form-label" for="top-k-slider" style="margin: 0;">Top-K Retrieved Evidence</label>
+              <span id="top-k-val" style="font-weight: 800; color: var(--color-teal); font-size: 0.875rem;">5</span>
+            </div>
+            <input type="range" id="top-k-slider" min="1" max="10" value="5" style="width: 100%;">
+          </div>
+
+          <!-- Active User Role (RBAC) -->
+          <div class="form-group">
+            <label class="form-label" for="role-select">Access Role (RBAC Security)</label>
+            <select id="role-select" class="form-select">
+              <option value="customer" selected>Customer (Public Catalog Only)</option>
+              <option value="admin">Administrator / Procurement (Confidential Costs &amp; Recalls)</option>
+            </select>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display: flex; gap: 10px; margin-top: 24px;">
+            <button id="btn-retrieve-only" class="btn btn-outline" style="flex: 1; font-size: 0.8125rem;">
+              🔍 Retrieve Only
+            </button>
+            <button id="btn-ask-rag" class="btn btn-primary" style="flex: 1; font-size: 0.8125rem;">
+              ⚡ Ask Full RAG
+            </button>
+          </div>
+
+          <!-- Server Tip -->
+          <div style="margin-top: 20px; padding: 12px; background: var(--color-bg); border-radius: 6px; font-size: 0.75rem; color: var(--color-text-muted); line-height: 1.5;">
+            💡 <strong>Workshop Note:</strong> When run via <code>python3 quirk-and-quanta/rag/server.py 8000</code>, arbitrary questions query live local vectors. Without the server, the lab uses precomputed reference vectors.
+          </div>
+        </aside>
+
+        <!-- Right Column: Results & Inspector -->
+        <section class="lab-panel">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h2 class="lab-panel-title" style="margin: 0;">
+              <span>📊</span> Retrieval &amp; Generation Output
+            </h2>
+            <div id="execution-mode-badge" class="badge badge-navy">
+              Ready
+            </div>
+          </div>
+
+          <!-- Telemetry Bar -->
+          <div id="telemetry-container" class="telemetry-bar">
+            <div class="telemetry-item">Embedding Latency: <strong id="time-emb">0.0 ms</strong></div>
+            <div class="telemetry-item">Retrieval Latency: <strong id="time-ret">0.0 ms</strong></div>
+            <div class="telemetry-item">Generation Latency: <strong id="time-gen">0.0 ms</strong></div>
+            <div class="telemetry-item">Total Request Time: <strong id="time-total" style="color: var(--color-teal);">0.0 ms</strong></div>
+          </div>
+
+          <!-- Grounded Answer Card (if generated) -->
+          <div id="answer-card-wrapper" style="display: none;">
+            <div class="answer-card">
+              <div class="answer-title">
+                <span>🤖</span> Grounded Generation Output
+              </div>
+              <div class="answer-body" id="generated-answer-text"></div>
+              <div style="margin-top: 14px; padding-top: 10px; border-top: 1px dashed rgba(15,118,110,0.3);">
+                <div style="font-size: 0.75rem; font-weight: 700; color: #0F766E; margin-bottom: 6px;">
+                  Attributed Sources:
+                </div>
+                <div id="answer-citations-list"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Evidence List -->
+          <div>
+            <h3 style="font-size: 0.9375rem; font-weight: 800; color: var(--color-navy); margin-bottom: 12px; display: flex; justify-content: space-between;">
+              <span>Retrieved Context Chunks</span>
+              <span id="evidence-count-label" style="font-weight: 600; color: var(--color-text-muted); font-size: 0.8125rem;">0 chunks</span>
+            </h3>
+            <div id="evidence-results-list">
+              <div style="padding: 40px; text-align: center; color: var(--color-text-muted); font-size: 0.875rem;">
+                Select a curated test question or type a query, then click <strong>Retrieve Only</strong> or <strong>Ask Full RAG</strong>.
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Global Footer -->
+  <footer class="site-footer" style="margin-top: 48px;">
+    <div class="container">
+      <div class="footer-bottom">
+        <div>
+          &copy; 2026 Quirk &amp; Quanta. "Beyond Basic RAG" Workshop Masterclass.
+        </div>
+        <div style="font-size: 0.75rem; color: var(--color-text-light);">
+          Gate 2 Exploration Bench &bull; Vanilla RAG Engine &bull; Zero External Dependencies
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Slide-Out Cart Drawer -->
+  <div class="modal-overlay" id="cart-drawer-overlay"></div>
+  <aside class="cart-drawer" id="cart-drawer" aria-label="Shopping Cart">
+    <div class="cart-drawer-header">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 1.25rem;">🛒</span>
+        <h3 style="font-size: 1.125rem; font-weight: 800;">Your Calibrated Basket</h3>
+      </div>
+      <button class="modal-close-btn" id="close-cart-btn" aria-label="Close cart">&times;</button>
+    </div>
+    <div class="cart-drawer-items" id="cart-items-container"></div>
+    <div class="cart-drawer-footer">
+      <div class="cart-subtotal-row">
+        <span>Subtotal</span>
+        <span id="cart-subtotal-price">₹0</span>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" id="checkout-action-btn">
+        Proceed to Checkout
+      </button>
+    </div>
+  </aside>
+
+  <!-- Modals -->
+  <div class="modal-overlay" id="checkout-demo-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title">Purchasing Disabled (Educational Demonstration)</h3>
+        <button class="modal-close-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Purchasing is disabled. Quirk &amp; Quanta exists solely as the multi-domain knowledge base for RAG workshops.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary close-modal-trigger">Understood</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="role-explainer-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title">Role Preview Demonstration Architecture</h3>
+        <button class="modal-close-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>In Gate 2, Role-Based Access Control filters out internal confidential procurement records for the Customer role before vector similarity retrieval occurs.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary close-modal-trigger">Understood</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- JavaScript Modules -->
+  <script src="js/app.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/role-preview.js"></script>
+  <script src="js/workshop.js"></script>
+</body>
+</html>
