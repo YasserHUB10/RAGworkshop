@@ -1,0 +1,12 @@
+{
+  "current_iteration": 1,
+  "max_iterations": 8,
+  "status": "IN_PROGRESS",
+  "active_milestone": "Iteration 1: Production Audit, Container Verification, Security Preflight",
+  "baseline_commit": "0c83696",
+  "current_commit": "0c83696",
+  "gcp_project": "momence-support-agent",
+  "region": "asia-south1",
+  "cloud_run_service": "quirk-quanta-rag",
+  "iterations_summary": []
+}

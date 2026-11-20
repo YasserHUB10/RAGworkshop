@@ -43,6 +43,18 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=SITE_DIR, **kwargs)
 
+    def translate_path(self, path):
+        """
+        Security hardening: Canonicalizes path to prevent directory traversal
+        outside of SITE_DIR (e.g. attempting to read data/internal/ or private source).
+        """
+        resolved = super().translate_path(path)
+        normalized = os.path.realpath(resolved)
+        real_site_dir = os.path.realpath(SITE_DIR)
+        if not (normalized == real_site_dir or normalized.startswith(real_site_dir + os.sep)):
+            return os.path.join(real_site_dir, "__blocked_path_traversal__")
+        return resolved
+
     def _send_json(self, data, status=200):
         body = json.dumps(data, indent=2).encode("utf-8")
         self.send_response(status)
@@ -65,6 +77,16 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
 
+        if path in ["/healthz", "/health", "/api/health"]:
+            self._send_json({
+                "status": "healthy",
+                "service": "quirk-quanta-rag",
+                "region": "asia-south1",
+                "version": "1.0.0",
+                "environment": "production-ready"
+            })
+            return
+
         if path == "/api/rag/status":
             api_key = os.environ.get("GEMINI_API_KEY", "")
             manifest_file = os.path.join(ROOT_DIR, "data", "embeddings", "v1", "embeddings_manifest.json")
@@ -72,6 +94,7 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
             self._send_json({
                 "status": "ready",
+                "service": "quirk-quanta-rag",
                 "embeddingModel": "gemini-embedding-001",
                 "vectorDimensions": 768,
                 "generationModel": "gemini-2.5-flash",
@@ -90,6 +113,11 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     "ENABLE_USAGE_LIMITS": True,
                     "ENABLE_OBSERVABILITY": True,
                     "ENABLE_RECORDED_DEMOS": True
+                },
+                "chunkingClassification": {
+                    "semantic": "Structural / Heading-Based Section Splitting (H1/H2 Markdown boundaries)",
+                    "fixed": "Fixed-Size 450-Char Word-Bounded Splitting",
+                    "sliding": "Sliding-Window 450-Char / 150-Overlap Splitting"
                 },
                 "graphNodes": len(graph.nodes),
                 "neo4j": neo4j_adapter.get_telemetry(),
@@ -330,20 +358,25 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
         self._send_json({"error": f"Endpoint not found: {path}"}, status=404)
 
-def create_server(port=8000):
+def create_server(port=8000, host="0.0.0.0"):
     http.server.ThreadingHTTPServer.allow_reuse_address = True
-    server = http.server.ThreadingHTTPServer(("", port), QuirkHTTPRequestHandler)
+    server = http.server.ThreadingHTTPServer((host, port), QuirkHTTPRequestHandler)
     server.daemon_threads = True
     return server
 
-def run_server(port=8000):
-    with create_server(port) as httpd:
+def run_server(port=None, host="0.0.0.0"):
+    if port is None:
+        port_env = os.environ.get("PORT")
+        port = int(port_env) if port_env else 8000
+    with create_server(port, host) as httpd:
         print("=" * 60)
         print(f"QUIRK & QUANTA UNIFIED STOREFRONT & RAG SERVER (Concurrent Threading)")
         print("=" * 60)
+        print(f"Binding Address:     http://{host}:{port}")
         print(f"Serving static site: {SITE_DIR}")
         print(f"Storefront URL:      http://localhost:{port}/index.html")
         print(f"Workshop Lab URL:    http://localhost:{port}/workshop.html")
+        print(f"Health Check:        http://localhost:{port}/healthz")
         print(f"API Endpoints:")
         print(f"  - POST http://localhost:{port}/api/rag/retrieve")
         print(f"  - POST http://localhost:{port}/api/rag/ask")
@@ -354,6 +387,7 @@ def run_server(port=8000):
         print(f"  - GET  http://localhost:{port}/api/rag/status")
         print(f"  - GET  http://localhost:{port}/api/rag/questions")
         print(f"  - GET  http://localhost:{port}/api/rag/telemetry")
+        print(f"  - GET  http://localhost:{port}/healthz")
         print("=" * 60)
         try:
             httpd.serve_forever()
@@ -361,5 +395,11 @@ def run_server(port=8000):
             print("\nShutting down server.")
 
 if __name__ == "__main__":
-    port_arg = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
-    run_server(port_arg)
+    port_env = os.environ.get("PORT")
+    port_val = int(port_env) if port_env else 8000
+    if len(sys.argv) > 1:
+        try:
+            port_val = int(sys.argv[1])
+        except ValueError:
+            pass
+    run_server(port=port_val, host="0.0.0.0")
