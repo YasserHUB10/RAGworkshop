@@ -271,11 +271,43 @@
             <span>⚙️</span> Retrieval Controls
           </h2>
 
+          <!-- 17 Film-Aligned Workshop Demos Selector (Gate G15) -->
+          <div class="form-group" style="background: #F8FAFC; border: 1px solid #CBD5E1; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label class="form-label" for="demo-preset-select" style="margin: 0; font-weight: 800; color: var(--color-navy);">
+                🎬 17 Film-Aligned Master Demos
+              </label>
+              <span class="badge badge-teal" style="font-size: 0.6875rem;">Gate G15 Active</span>
+            </div>
+            <select id="demo-preset-select" class="form-select" style="font-weight: 600; border-color: var(--color-teal);">
+              <option value="">-- Select one of 17 Workshop Demos --</option>
+              <option value="DEMO-01">Demo 01: Baseline Dense Vector Retrieval (Gate G2)</option>
+              <option value="DEMO-02">Demo 02: Fixed-Size Chunking Inspection (Gate G3)</option>
+              <option value="DEMO-03">Demo 03: Sliding-Window Chunking with Overlap (Gate G3)</option>
+              <option value="DEMO-04">Demo 04: Semantic / Structural Chunking Inspection (Gate G3)</option>
+              <option value="DEMO-05">Demo 05: Lexical BM25 Search on Exact SKU (Gate G4)</option>
+              <option value="DEMO-06">Demo 06: Hybrid RRF Search (Vector + BM25) (Gate G5)</option>
+              <option value="DEMO-07">Demo 07: 3-Product Flickering Multi-Hop Failure (Gate G6)</option>
+              <option value="DEMO-08">Demo 08: Local GraphRAG Deterministic Root-Cause Traversal (Gate G7)</option>
+              <option value="DEMO-09">Demo 09: Neo4j AuraDB Cypher Import & Traversal (Gate O1)</option>
+              <option value="DEMO-10">Demo 10: Comparative Evaluation Harness & Empirical Metrics (Gate G8)</option>
+              <option value="DEMO-11">Demo 11: Calibrated Grounded Abstention on Out-of-Domain Query (Gate G9)</option>
+              <option value="DEMO-12">Demo 12: Direct Prompt Injection Attack (Blackbeard Pirate) (Gate G10)</option>
+              <option value="DEMO-13">Demo 13: Off-Topic Scope Rejection & Indirect Injection Defanging (Gate G11)</option>
+              <option value="DEMO-14">Demo 14: Observability, Distributed Tracing & Cost Spikes (Gate G14)</option>
+              <option value="DEMO-15">Demo 15: Server-Side RBAC Enforcement & Customer Privilege Demotion (Gate G12)</option>
+              <option value="DEMO-16">Demo 16: IDOR Direct Resource Access Protection (Gate G13)</option>
+              <option value="DEMO-17">Demo 17: Dependency Fallback & Graceful Degradation (Gate G16)</option>
+            </select>
+            <div id="demo-description-box" style="font-size: 0.75rem; color: var(--color-navy); margin-top: 6px; line-height: 1.4; display: none; background: #EEF2F6; padding: 8px; border-radius: 4px; border-left: 3px solid var(--color-teal);">
+            </div>
+          </div>
+
           <!-- Golden Question Selector -->
           <div class="form-group">
             <label class="form-label" for="question-preset-select">Curated Workshop Questions (Golden Dataset)</label>
             <select id="question-preset-select" class="form-select">
-              <option value="">-- Choose a test case (22 curated) --</option>
+              <option value="">-- Choose a test case (42 curated) --</option>
             </select>
           </div>
 
