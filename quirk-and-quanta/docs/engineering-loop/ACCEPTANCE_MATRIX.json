@@ -82,21 +82,21 @@
       "name": "Server-Side RBAC Enforcement",
       "description": "Confidential cost and procurement data protected by server-side cryptographic/session role enforcement.",
       "status": "GREEN",
-      "verified_commit": "pending-run-04",
+      "verified_commit": "5235de5",
       "tests": ["tests/test-security.py"]
     },
     "G13": {
       "name": "IDOR & Role Tampering Defense",
       "description": "Client role parameter manipulation and direct object reference traversal rejected in hardened mode.",
       "status": "GREEN",
-      "verified_commit": "pending-run-04",
+      "verified_commit": "5235de5",
       "tests": ["tests/test-security.py"]
     },
     "G14": {
       "name": "Observability & Request Tracing",
       "description": "Structured execution traces with request ID, latency breakdown, token usage, and simulated cost attribution.",
-      "status": "PENDING",
-      "verified_commit": null,
+      "status": "GREEN",
+      "verified_commit": "pending-run-05",
       "tests": ["tests/test-observability.py"]
     },
     "G15": {

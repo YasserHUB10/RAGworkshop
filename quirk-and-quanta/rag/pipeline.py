@@ -2,7 +2,7 @@
 Quirk & Quanta - End-to-End RAG Pipeline Coordinator
 Executes query embedding, multi-strategy retrieval (Vector, BM25, Hybrid),
 Knowledge Graph multi-hop traversal (GraphRAG), multi-layer Guardrails,
-Cryptographic Server-Side RBAC Enforcement, and grounded answer generation.
+Cryptographic Server-Side RBAC Enforcement, and Observability Tracing.
 """
 
 import os
@@ -14,12 +14,14 @@ from .generator import generate_grounded_answer
 from .graph_local import get_graph
 from .guardrails import get_guardrails
 from .auth import resolve_effective_role, check_resource_access
+from .observability import get_trace_collector
 
 class RAGPipeline:
     def __init__(self, default_strategy: str = "semantic"):
         self.retriever = QuirkRetriever(default_strategy=default_strategy)
         self.graph = get_graph()
         self.guardrails = get_guardrails()
+        self.tracer = get_trace_collector()
 
     def ask(
         self,
@@ -36,11 +38,21 @@ class RAGPipeline:
     ) -> Dict[str, Any]:
         """
         Executes the full RAG pipeline across Vector, BM25, Hybrid, or Graph methods
-        with active server-side RBAC token verification, guardrails, and grounding.
+        with active server-side RBAC token verification, guardrails, and tracing.
         """
         pipeline_start = time.perf_counter()
 
+        # Initialize Observability Trace
+        trace = self.tracer.start_trace(
+            session_id=session_id,
+            role=role,
+            question=question,
+            strategy=strategy,
+            method=method
+        )
+
         # Step 0: Server-Side RBAC Authentication Check
+        auth_start = time.perf_counter()
         if auth_token is not None:
             effective_role, was_tampered, auth_msg = resolve_effective_role(
                 requested_role=role,
@@ -51,6 +63,8 @@ class RAGPipeline:
             effective_role = role
             was_tampered = False
             auth_msg = f"Role '{role}' passed."
+        auth_ms = round((time.perf_counter() - auth_start) * 1000, 2)
+        trace.add_span("auth_verification", auth_ms, {"effectiveRole": effective_role, "wasTampered": was_tampered})
 
         role_telemetry = {
             "requestedRole": role,
@@ -64,6 +78,11 @@ class RAGPipeline:
         if strategy.lower() == "graph" or effective_method == "graph":
             res = self.ask_graph(question, role=effective_role)
             res["roleResolution"] = role_telemetry
+            trace.add_span("graph_traversal", res["latency"]["retrievalMs"])
+            trace.complete(res["answer"], res["evidence"], "PASSED")
+            self.tracer.record_trace(trace)
+            res["trace"] = trace.to_dict()
+            res["requestId"] = trace.request_id
             return res
 
         # Step 1 & 2: Multi-Strategy Retrieval with Enforced Effective Role
@@ -77,6 +96,10 @@ class RAGPipeline:
         )
 
         evidence = retrieval_result["evidence"]
+        trace.add_span("retrieval", retrieval_result["latency"]["retrievalMs"], {
+            "method": retrieval_result.get("retrievalMethod", method),
+            "evidenceCount": len(evidence)
+        })
 
         # Step 3: Guardrails & Security Evaluation
         guard_start = time.perf_counter()
@@ -88,11 +111,16 @@ class RAGPipeline:
             session_id=session_id
         )
         guard_ms = round((time.perf_counter() - guard_start) * 1000, 2)
+        trace.add_span("guardrails", guard_ms, {"action": guard_res["action"], "reason": guard_res["reason"]})
 
         # Handle Guardrail interventions
         if guard_res["action"] != "PROCEED":
             total_ms = round((time.perf_counter() - pipeline_start) * 1000, 2)
+            trace.complete(guard_res["answer"], evidence, guard_res["action"])
+            self.tracer.record_trace(trace)
+
             return {
+                "requestId": trace.request_id,
                 "question": question,
                 "role": effective_role,
                 "roleResolution": role_telemetry,
@@ -108,8 +136,10 @@ class RAGPipeline:
                 "answer": guard_res["answer"],
                 "citations": [],
                 "evidence": evidence if not retrieval_only else [],
+                "trace": trace.to_dict(),
                 "latency": {
                     **retrieval_result.get("latency", {}),
+                    "authMs": auth_ms,
                     "guardrailMs": guard_ms,
                     "generationMs": 0.2,
                     "totalMs": total_ms
@@ -122,6 +152,7 @@ class RAGPipeline:
         if retrieval_only:
             total_ms = round((time.perf_counter() - pipeline_start) * 1000, 2)
             retrieval_result["latency"]["totalMs"] = total_ms
+            retrieval_result["latency"]["authMs"] = auth_ms
             retrieval_result["latency"]["guardrailMs"] = guard_ms
             retrieval_result["retrievalOnly"] = True
             retrieval_result["roleResolution"] = role_telemetry
@@ -129,6 +160,10 @@ class RAGPipeline:
             retrieval_result["guardrailAction"] = "PASSED"
             retrieval_result["answer"] = None
             retrieval_result["evidence"] = sanitized_evidence
+            trace.complete("[Retrieval Only Request]", sanitized_evidence, "PASSED")
+            self.tracer.record_trace(trace)
+            retrieval_result["trace"] = trace.to_dict()
+            retrieval_result["requestId"] = trace.request_id
             return retrieval_result
 
         # Step 4: Grounded Answer Generation
@@ -138,10 +173,14 @@ class RAGPipeline:
             role=effective_role,
             api_key=api_key
         )
+        trace.add_span("generation", gen_result["latencyMs"], {"model": gen_result.get("model")})
 
         total_ms = round((time.perf_counter() - pipeline_start) * 1000, 2)
+        trace.complete(gen_result["answer"], sanitized_evidence, "PASSED")
+        self.tracer.record_trace(trace)
 
         return {
+            "requestId": trace.request_id,
             "question": question,
             "role": effective_role,
             "roleResolution": role_telemetry,
@@ -157,8 +196,10 @@ class RAGPipeline:
             "answer": gen_result["answer"],
             "citations": gen_result["citations"],
             "evidence": sanitized_evidence,
+            "trace": trace.to_dict(),
             "latency": {
                 **retrieval_result.get("latency", {}),
+                "authMs": auth_ms,
                 "guardrailMs": guard_ms,
                 "generationMs": gen_result["latencyMs"],
                 "totalMs": total_ms

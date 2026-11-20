@@ -86,13 +86,24 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     "ENABLE_PROMPT_INJECTION_DEFENSE": True,
                     "ENABLE_RBAC": True,
                     "ENABLE_USAGE_LIMITS": True,
-                    "ENABLE_OBSERVABILITY": False,
+                    "ENABLE_OBSERVABILITY": True,
                     "ENABLE_RECORDED_DEMOS": True
                 },
                 "graphNodes": len(graph.nodes),
+                "observability": pipeline.tracer.get_aggregate_telemetry(),
                 "embeddings": manifest.get("strategies", {}),
                 "totalChunks": manifest.get("totalChunksEmbedded", 0)
             })
+            return
+
+        elif path == "/api/rag/traces":
+            traces = pipeline.tracer.get_recent_traces(limit=25)
+            self._send_json(traces)
+            return
+
+        elif path == "/api/rag/traces/aggregate":
+            telemetry = pipeline.tracer.get_aggregate_telemetry()
+            self._send_json(telemetry)
             return
 
         elif path == "/api/rag/auth/demo-token":
@@ -305,6 +316,13 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 "authMessage": auth_msg,
                 "document": doc_content
             })
+            return
+
+        elif path == "/api/rag/simulate-spike":
+            # Story 7 Cost Spike Simulation (Demo 14)
+            iterations = int(params.get("iterations", 40))
+            spike_data = pipeline.tracer.simulate_cost_spike(iterations=iterations)
+            self._send_json(spike_data)
             return
 
         self._send_json({"error": f"Endpoint not found: {path}"}, status=404)

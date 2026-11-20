@@ -368,6 +368,11 @@
               🎯 Test IDOR Direct Resource Access (Demo 16)
             </button>
           </div>
+          <div style="margin-top: 10px;">
+            <button id="btn-cost-spike" class="btn btn-outline" style="width: 100%; font-size: 0.8125rem; border-color: #F59E0B; color: #B45309;">
+              📈 Simulate Runaway Cost Spike (Demo 14)
+            </button>
+          </div>
 
           <!-- Server Tip -->
           <div style="margin-top: 20px; padding: 12px; background: var(--color-bg); border-radius: 6px; font-size: 0.75rem; color: var(--color-text-muted); line-height: 1.5;">
@@ -388,10 +393,13 @@
 
           <!-- Telemetry Bar -->
           <div id="telemetry-container" class="telemetry-bar">
-            <div class="telemetry-item">Embedding Latency: <strong id="time-emb">0.0 ms</strong></div>
-            <div class="telemetry-item">Retrieval Latency: <strong id="time-ret">0.0 ms</strong></div>
-            <div class="telemetry-item">Generation Latency: <strong id="time-gen">0.0 ms</strong></div>
-            <div class="telemetry-item">Total Request Time: <strong id="time-total" style="color: var(--color-teal);">0.0 ms</strong></div>
+            <div class="telemetry-item">Request ID: <strong id="trace-req-id" style="font-family:monospace; font-size:0.75rem;">none</strong></div>
+            <div class="telemetry-item">Embedding: <strong id="time-emb">0.0 ms</strong></div>
+            <div class="telemetry-item">Retrieval: <strong id="time-ret">0.0 ms</strong></div>
+            <div class="telemetry-item">Generation: <strong id="time-gen">0.0 ms</strong></div>
+            <div class="telemetry-item">Total Latency: <strong id="time-total" style="color: var(--color-teal);">0.0 ms</strong></div>
+            <div class="telemetry-item">Tokens: <strong id="trace-tokens">0 in / 0 out</strong></div>
+            <div class="telemetry-item">Cost: <strong id="trace-cost" style="color: #D97706;">$0.000000</strong></div>
           </div>
 
           <!-- Grounded Answer Card (if generated) -->
@@ -407,6 +415,19 @@
                 </div>
                 <div id="answer-citations-list"></div>
               </div>
+            </div>
+          </div>
+
+          <!-- Cost Spike Panel (Story 7 Demo 14) -->
+          <div id="cost-spike-wrapper" style="display: none; margin-bottom: 24px;">
+            <div class="lab-panel" style="background: #FFFBEB; border: 2px solid #F59E0B;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="font-size: 1rem; font-weight: 800; color: #92400E; margin: 0;">
+                  📈 Story 7: "Arthur Receives the Bill" — Usage Spike vs Budget Protection
+                </h3>
+                <span class="badge badge-gold" id="cost-spike-badge">Simulation Complete</span>
+              </div>
+              <div id="cost-spike-container"></div>
             </div>
           </div>
 

@@ -49,6 +49,13 @@ function setupControls() {
       executeIdorTest();
     });
   }
+
+  const btnSpike = document.getElementById('btn-cost-spike');
+  if (btnSpike) {
+    btnSpike.addEventListener('click', async () => {
+      executeCostSpikeSimulation();
+    });
+  }
   const topKSlider = document.getElementById('top-k-slider');
   const topKVal = document.getElementById('top-k-val');
   if (topKSlider && topKVal) {
@@ -345,12 +352,23 @@ function renderResults(data, retrievalOnly) {
   const evidenceCount = document.getElementById('evidence-count-label');
   const evidenceList = document.getElementById('evidence-results-list');
 
-  // Latency
+  // Latency & Observability
   const lat = data.latency || {};
   if (timeEmb) timeEmb.textContent = `${lat.embeddingMs || 0} ms`;
   if (timeRet) timeRet.textContent = `${lat.retrievalMs || lat.vectorRetrievalMs || 0} ms`;
   if (timeGen) timeGen.textContent = `${lat.generationMs || 0} ms`;
   if (timeTotal) timeTotal.textContent = `${lat.totalMs || 0} ms`;
+
+  // Trace ID & Tokens & Cost
+  const reqIdEl = document.getElementById('trace-req-id');
+  const tokensEl = document.getElementById('trace-tokens');
+  const costEl = document.getElementById('trace-cost');
+  const tr = data.trace || {};
+  const tok = tr.tokenUsage || {};
+
+  if (reqIdEl) reqIdEl.textContent = data.requestId || tr.requestId || 'req_local';
+  if (tokensEl) tokensEl.textContent = `${tok.promptTokens || 0} in / ${tok.completionTokens || 0} out`;
+  if (costEl) costEl.textContent = `$${(tr.estimatedCostUsd || 0).toFixed(6)}`;
 
   // Mode Badge & Guardrail Alerts
   if (modeBadge) {
@@ -586,4 +604,54 @@ function renderGraphAnalysis(analysis, container) {
   });
 
   container.innerHTML = html;
+}
+
+async function executeCostSpikeSimulation() {
+  const spikeWrapper = document.getElementById('cost-spike-wrapper');
+  const spikeContainer = document.getElementById('cost-spike-container');
+
+  try {
+    const res = await fetch('/api/rag/simulate-spike', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ iterations: 40 })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (spikeWrapper) spikeWrapper.style.display = 'block';
+      if (spikeContainer) {
+        spikeContainer.innerHTML = `
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 12px;">
+            <div style="background: #FEF2F2; border: 1px solid #FCA5A5; border-radius: 6px; padding: 12px;">
+              <div style="font-weight: 800; color: #991B1B; font-size: 0.875rem; margin-bottom: 4px;">
+                🚨 Unprotected Runaway (Story 7)
+              </div>
+              <div style="font-size: 0.75rem; color: #7F1D1D;">
+                Tokens Burned: <strong>${data.unprotectedRunaway.totalTokens.toLocaleString()}</strong><br>
+                Estimated Bill: <strong style="color: #DC2626; font-size: 1rem;">$${data.unprotectedRunaway.totalCostUsd.toFixed(4)}</strong><br>
+                Status: <span class="badge badge-danger">${data.unprotectedRunaway.status}</span>
+              </div>
+            </div>
+
+            <div style="background: #ECFDF5; border: 1px solid #6EE7B7; border-radius: 6px; padding: 12px;">
+              <div style="font-weight: 800; color: #065F46; font-size: 0.875rem; margin-bottom: 4px;">
+                🛡️ Protected Safeguard (Budgets Active)
+              </div>
+              <div style="font-size: 0.75rem; color: #047857;">
+                Tokens Capped: <strong>${data.protectedSafeguard.totalTokens.toLocaleString()}</strong><br>
+                Controlled Bill: <strong style="color: #059669; font-size: 1rem;">$${data.protectedSafeguard.totalCostUsd.toFixed(4)}</strong><br>
+                Throttled Requests: <strong>${data.protectedSafeguard.throttledRequests}</strong> blocked<br>
+                Status: <span class="badge badge-teal">${data.protectedSafeguard.status}</span>
+              </div>
+            </div>
+          </div>
+          <div style="font-size: 0.8125rem; color: #92400E; background: #FFFBEB; padding: 10px; border-radius: 4px; border: 1px solid #FCD34D;">
+            💰 <strong>Net Cloud Spend Saved: $${data.costSavedUsd.toFixed(4)}</strong> &bull; ${escapeHtml(data.conclusion)}
+          </div>
+        `;
+      }
+    }
+  } catch (err) {
+    alert('Failed to simulate cost spike: ' + err.message);
+  }
 }

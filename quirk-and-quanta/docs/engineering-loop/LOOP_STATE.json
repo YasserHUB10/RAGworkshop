@@ -1,12 +1,12 @@
 {
-  "current_iteration": 4,
+  "current_iteration": 5,
   "max_iterations": 8,
   "status": "IN_PROGRESS",
-  "active_track": "P0-F",
-  "selected_target": "Server-Side RBAC Enforcement, Confidential Cost Protection & IDOR Mitigation",
-  "last_completed_iteration": 3,
+  "active_track": "P0-G",
+  "selected_target": "Observability, Structured Tracing, Token Usage, Latency Breakdown & Simulated Cost Spikes",
+  "last_completed_iteration": 4,
   "baseline_commit": "c649390",
-  "current_commit": "fb0baff",
+  "current_commit": "5235de5",
   "iterations_summary": [
     {
       "iteration": 1,
@@ -37,6 +37,16 @@
       "tests_passed": 37,
       "tests_failed": 0,
       "guardrails": "Direct injection blocked, vulnerable pirate mode demonstrated, coding tutor rejected, indirect injection sanitized"
+    },
+    {
+      "iteration": 4,
+      "track": "P0-F",
+      "status": "GREEN",
+      "commit": "5235de5",
+      "gates_passed": ["G12", "G13"],
+      "tests_passed": 45,
+      "tests_failed": 0,
+      "security_rbac": "HMAC token verification, client role tampering demotion, cost leakage prevented, IDOR protected"
     }
   ]
 }
