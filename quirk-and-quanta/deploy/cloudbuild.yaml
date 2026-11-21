@@ -61,7 +61,7 @@ steps:
       - '--set-env-vars'
       - 'PYTHONUNBUFFERED=1,WORKSHOP_MODE=production,PROJECT_ID=idc-rag-proj,REGION=asia-south1'
       - '--set-secrets'
-      - 'QUIRK_AUTH_SECRET=quirk-quanta-auth-secret:latest,PRESENTER_TOKEN=quirk-quanta-presenter-token:latest'
+      - 'QUIRK_AUTH_SECRET=quirk-quanta-auth-secret:latest,PRESENTER_TOKEN=quirk-quanta-presenter-token:latest,GEMINI_API_KEY=gemini-api-key:latest'
 
 images:
   - 'asia-south1-docker.pkg.dev/idc-rag-proj/quirk-quanta/rag-service:$_TAG'
