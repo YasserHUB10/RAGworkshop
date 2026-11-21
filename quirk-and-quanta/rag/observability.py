@@ -89,6 +89,8 @@ class RequestTrace:
             "method": self.method,
             "status": self.status,
             "guardrailAction": self.guardrail_action,
+            "totalDurationMs": self.total_ms,
+            "stages": self.spans,
             "latency": {
                 "totalMs": self.total_ms,
                 "spans": self.spans
@@ -98,7 +100,10 @@ class RequestTrace:
                 "completionTokens": self.output_tokens,
                 "totalTokens": self.input_tokens + self.output_tokens
             },
-            "estimatedCostUsd": self.cost_usd
+            "estimatedCostUsd": self.cost_usd,
+            "pricingModel": "gemini-2.5-flash ($0.075/1M in, $0.30/1M out)",
+            "pricingVersion": "2026-11-published",
+            "modelId": "gemini-2.5-flash"
         }
 
 class TraceCollector:

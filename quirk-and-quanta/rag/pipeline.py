@@ -654,5 +654,6 @@ class RAGPipeline:
             "mode": mode,
             "strategy": strategy,
             "totalDurationMs": total_ms,
-            "stages": stages
+            "stages": stages,
+            "steps": stages
         }

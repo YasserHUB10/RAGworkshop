@@ -582,6 +582,237 @@
       padding: 1px 4px;
       border-radius: 3px;
     }
+
+    /* =========================================================
+       OBSERVABILITY & RETRIEVAL EVALS DASHBOARD STYLES
+       ========================================================= */
+    .obs-dashboard-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .obs-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .obs-mode-switcher {
+      display: flex;
+      background: #F1F5F9;
+      padding: 4px;
+      border-radius: 8px;
+      gap: 4px;
+      border: 1px solid var(--color-border);
+    }
+    .obs-mode-btn {
+      padding: 6px 14px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border: none;
+      background: transparent;
+      color: #64748B;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .obs-mode-btn:hover {
+      color: var(--color-navy);
+    }
+    .obs-mode-btn.active {
+      background: #FFFFFF;
+      color: var(--color-teal);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* KPI Grid */
+    .obs-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+    }
+    .obs-kpi-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+    .obs-kpi-scope-badge {
+      font-size: 0.625rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      align-self: flex-start;
+      margin-bottom: 4px;
+    }
+    .obs-kpi-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #64748B;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .obs-kpi-value {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--color-navy);
+      font-family: ui-monospace, SFMono-Regular, monospace;
+    }
+    .obs-kpi-subtext {
+      font-size: 0.6875rem;
+      color: #64748B;
+      line-height: 1.3;
+    }
+
+    /* Tables */
+    .obs-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    .obs-card-title {
+      font-size: 0.875rem;
+      font-weight: 800;
+      color: var(--color-navy);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .obs-table-wrapper {
+      overflow-x: auto;
+      max-height: 340px;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+    }
+    .obs-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.75rem;
+      text-align: left;
+    }
+    .obs-table th {
+      background: #F8FAFC;
+      padding: 8px 10px;
+      font-weight: 800;
+      color: var(--color-navy);
+      border-bottom: 2px solid var(--color-border);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    .obs-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--color-border);
+      color: #334155;
+    }
+    .obs-table tr:hover {
+      background: #F1F5F9;
+      cursor: pointer;
+    }
+    .obs-table tr.active-row {
+      background: #E6FFFA;
+      font-weight: 600;
+    }
+
+    /* Request Waterfall */
+    .obs-waterfall-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .obs-waterfall-item {
+      background: #F8FAFC;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .obs-waterfall-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+    }
+    .obs-bar-track {
+      background: #E2E8F0;
+      border-radius: 4px;
+      height: 8px;
+      width: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+    .obs-bar-fill {
+      background: var(--color-teal);
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+    .obs-bar-fallback { background: #F59E0B; }
+    .obs-bar-intervened { background: #EF4444; }
+    .obs-bar-skipped { background: #94A3B8; }
+
+    /* Scorecard Table */
+    .obs-scorecard-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      text-align: left;
+    }
+    .obs-scorecard-table th {
+      padding: 10px 12px;
+      background: #F8FAFC;
+      border-bottom: 2px solid var(--color-border);
+      font-weight: 800;
+      color: var(--color-navy);
+    }
+    .obs-scorecard-table td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    /* Native SVG Charts */
+    .obs-charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+      margin-top: 12px;
+    }
+    .obs-svg-chart {
+      width: 100%;
+      height: 200px;
+      background: #FAFBFD;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      padding: 10px;
+    }
+
+    /* Inspector Tags */
+    .obs-diff-tag {
+      font-family: ui-monospace, monospace;
+      font-size: 0.6875rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+      margin: 2px 3px;
+    }
+    .obs-diff-hit { background: #ECFDF5; color: #047857; border: 1px solid #10B981; }
+    .obs-diff-miss { background: #FEF2F2; color: #B91C1C; border: 1px solid #EF4444; }
+    .obs-diff-extra { background: #FFFBEB; color: #B45309; border: 1px solid #F59E0B; }
   </style>
 </head>
 <body>
@@ -922,6 +1153,9 @@
             </button>
             <button class="lab-tab-btn" data-tab="okf" role="tab">
               <span>🕸️</span> OKF &amp; Graph Explorer
+            </button>
+            <button class="lab-tab-btn" data-tab="observability" role="tab" id="tab-btn-observability">
+              <span>📈</span> Observability &amp; Evals
             </button>
           </div>
 
@@ -1426,6 +1660,401 @@
               </div>
             </div>
 
+          </div>
+
+          <!-- TAB 6: Observability & Evals -->
+          <div id="tab-observability" class="tab-content-panel" style="display: none;">
+            <div class="obs-dashboard-container">
+
+              <!-- Top Header & Sub-mode Switcher -->
+              <div class="obs-header">
+                <div>
+                  <h2 class="lab-panel-title" style="margin: 0 0 4px 0;">
+                    <span>📈</span> Observability, Traces &amp; Retrieval Evals
+                  </h2>
+                  <div style="font-size: 0.78125rem; color: #64748B;">
+                    Sub-millisecond latency profiling, token economics, golden accuracy benchmarks, and failure analysis.
+                  </div>
+                </div>
+                <div class="obs-mode-switcher" role="tablist">
+                  <button type="button" class="obs-mode-btn active" id="btn-subtab-live" role="tab">
+                    ⚡ Live Request Observability
+                  </button>
+                  <button type="button" class="obs-mode-btn" id="btn-subtab-evals" role="tab">
+                    📊 Golden Evaluations (42 Cases)
+                  </button>
+                </div>
+              </div>
+
+              <!-- Top 4 KPI Cards (Clear Scopes) -->
+              <div class="obs-kpi-grid">
+                <div class="obs-kpi-card">
+                  <span class="obs-kpi-scope-badge badge-teal">YOUR BROWSER SESSION</span>
+                  <div class="obs-kpi-title">Queries Executed</div>
+                  <div class="obs-kpi-value" id="kpi-session-queries">0</div>
+                  <div class="obs-kpi-subtext">Client session ring buffer (last 30 requests)</div>
+                </div>
+
+                <div class="obs-kpi-card">
+                  <span class="obs-kpi-scope-badge badge-navy">MEASURED TIMINGS</span>
+                  <div class="obs-kpi-title">Latency (Avg / P95)</div>
+                  <div class="obs-kpi-value" id="kpi-session-latency">0.0 ms / 0.0 ms</div>
+                  <div class="obs-kpi-subtext">Server perf-counter nanosecond instrumentation</div>
+                </div>
+
+                <div class="obs-kpi-card">
+                  <span class="obs-kpi-scope-badge badge-gold">ESTIMATED API COST</span>
+                  <div class="obs-kpi-title">Gemini Token Cost</div>
+                  <div class="obs-kpi-value" id="kpi-session-cost" style="color: #D97706;">$0.000000</div>
+                  <div class="obs-kpi-subtext">Gemini 2.5 Flash ($0.075 / $0.30 per 1M tokens)</div>
+                </div>
+
+                <div class="obs-kpi-card">
+                  <span class="obs-kpi-scope-badge badge-teal">GOLDEN BASELINE (42 CASES)</span>
+                  <div class="obs-kpi-title">Retrieval Accuracy</div>
+                  <div class="obs-kpi-value" id="kpi-golden-hitrate" style="font-size: 1.0625rem;">BM25: 57.1% | Hyb: 50.0%</div>
+                  <div class="obs-kpi-subtext">Hit Rate@5 across 7 functional query families</div>
+                </div>
+              </div>
+
+              <!-- ========================================================= -->
+              <!-- SUB-MODE A: LIVE REQUEST OBSERVABILITY                    -->
+              <!-- ========================================================= -->
+              <div id="obs-mode-live-container" style="display: flex; flex-direction: column; gap: 18px;">
+
+                <!-- Request History Table -->
+                <div class="obs-card">
+                  <div class="obs-card-title">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span>📋</span>
+                      <span>Client Session Request History</span>
+                      <span class="badge badge-navy" style="font-size: 0.6875rem;" id="obs-history-count-badge">0 requests</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <select id="obs-filter-strategy" class="form-select" style="width: auto; padding: 4px 8px; font-size: 0.75rem;">
+                        <option value="all">All Strategies</option>
+                        <option value="vector">Vector Only</option>
+                        <option value="bm25">BM25 Only</option>
+                        <option value="hybrid">Hybrid Only</option>
+                        <option value="graph">GraphRAG Only</option>
+                      </select>
+                      <button type="button" class="btn btn-outline" id="btn-clear-session" style="font-size: 0.6875rem; padding: 4px 8px;">
+                        🗑️ Clear
+                      </button>
+                      <button type="button" class="btn btn-outline" id="btn-export-session" style="font-size: 0.6875rem; padding: 4px 8px;">
+                        📥 Export JSON
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="obs-table-wrapper">
+                    <table class="obs-table">
+                      <thead>
+                        <tr>
+                          <th>Time</th>
+                          <th>Request ID</th>
+                          <th>Question</th>
+                          <th>Strategy</th>
+                          <th>Mode</th>
+                          <th>Latency</th>
+                          <th>Tokens (In/Out)</th>
+                          <th>Est. Cost</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody id="obs-history-tbody">
+                        <tr>
+                          <td colspan="9" style="text-align: center; color: #64748B; padding: 30px;">
+                            No queries recorded in this browser session yet. Run a search or click a Film Preset to capture live traces!
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div style="margin-top: 8px; font-size: 0.6875rem; color: #64748B;">
+                    💡 <em>Click any row above to inspect its execution waterfall and token economics below.</em>
+                  </div>
+                </div>
+
+                <!-- Request Execution Waterfall -->
+                <div class="obs-card" id="obs-waterfall-card">
+                  <div class="obs-card-title">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span>⏱️</span>
+                      <span>Execution Stage Waterfall: <code id="obs-selected-req-id" style="font-size: 0.8125rem;">none</code></span>
+                    </div>
+                    <div id="obs-selected-status-badges" style="display: flex; gap: 6px;">
+                      <span class="badge badge-navy" id="obs-waterfall-mode-badge">AWAITING QUERY</span>
+                    </div>
+                  </div>
+
+                  <div id="obs-waterfall-stages" class="obs-waterfall-list">
+                    <div style="padding: 24px; text-align: center; color: #64748B; font-size: 0.75rem;">
+                      Submit a query in the playground to visualize its measured execution waterfall.
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Cost Explorer & Runaway Intern Simulation -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+                  
+                  <!-- Token & Cost Economics Card -->
+                  <div class="obs-card">
+                    <div class="obs-card-title">
+                      <span>💰 Token &amp; Cost Accounting</span>
+                      <span class="badge badge-teal">GEMINI 2.5 FLASH</span>
+                    </div>
+                    <div style="font-size: 0.75rem; color: #334155; line-height: 1.5; display: flex; flex-direction: column; gap: 8px;">
+                      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--color-border); padding-bottom: 6px;">
+                        <span>Input / Prompt Tokens:</span>
+                        <strong id="obs-cost-input-tokens" style="font-family: monospace;">0 tokens</strong>
+                      </div>
+                      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--color-border); padding-bottom: 6px;">
+                        <span>Output / Completion Tokens:</span>
+                        <strong id="obs-cost-output-tokens" style="font-family: monospace;">0 tokens</strong>
+                      </div>
+                      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--color-border); padding-bottom: 6px;">
+                        <span>Published Unit Pricing:</span>
+                        <span style="font-family: monospace;">$0.075 / 1M in &bull; $0.30 / 1M out</span>
+                      </div>
+                      <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--color-border); padding-bottom: 6px;">
+                        <span>Per-Request Estimated Cost:</span>
+                        <strong id="obs-cost-req-usd" style="color: #D97706; font-family: monospace;">$0.000000</strong>
+                      </div>
+                      <div style="display: flex; justify-content: space-between; padding-top: 2px;">
+                        <span>Session Cumulative Estimated Cost:</span>
+                        <strong id="obs-cost-cum-usd" style="color: #D97706; font-family: monospace;">$0.000000</strong>
+                      </div>
+                    </div>
+                    <div style="margin-top: 12px; padding: 8px; background: #F8FAFC; border-radius: 6px; font-size: 0.6875rem; color: #64748B;">
+                      <strong>Scope Transparency:</strong> Computed token cost is an <em>estimated API cost</em> based on published pricing, not an actual Google Cloud invoice total. Offline reference synthesizers incur $0.00 live spend.
+                    </div>
+                  </div>
+
+                  <!-- Story 7: Intern Runaway Loop Simulation -->
+                  <div class="obs-card" style="border-top: 4px solid #F59E0B;">
+                    <div class="obs-card-title">
+                      <span>⚠️ Story 7: Arthur Receives the Bill</span>
+                      <span class="badge badge-gold">SIMULATION &bull; ZERO SPEND</span>
+                    </div>
+                    <div style="font-size: 0.75rem; color: #334155; line-height: 1.45; margin-bottom: 12px;">
+                      Simulates an unmonitored intern script writing <code>while True: call_rag()</code> vs Quirk &amp; Quanta spending safeguards.
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                      <button type="button" class="btn btn-outline" id="btn-run-sim-spike" style="font-size: 0.75rem; font-weight: 700; color: #B45309; border-color: #F59E0B;">
+                        ⚡ Simulate Runaway Intern Spike
+                      </button>
+                      <span style="font-size: 0.6875rem; color: #64748B;">40 recursive loops</span>
+                    </div>
+                    <div id="obs-sim-results-box" style="padding: 10px; background: #FFFBEB; border: 1px dashed #F59E0B; border-radius: 6px; font-size: 0.71875rem; color: #92400E; display: none;">
+                      <!-- Populated dynamically -->
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+
+              <!-- ========================================================= -->
+              <!-- SUB-MODE B: GOLDEN BENCHMARK EVALUATIONS                  -->
+              <!-- ========================================================= -->
+              <div id="obs-mode-evals-container" style="display: none; flex-direction: column; gap: 18px;">
+
+                <!-- Scorecard Comparison Table -->
+                <div class="obs-card">
+                  <div class="obs-card-title">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span>⚖️</span>
+                      <span>Golden Dataset Benchmark Scorecard (42 Curated Cases)</span>
+                    </div>
+                    <span class="badge badge-teal">DATASET VERSION: v1.0-42q</span>
+                  </div>
+
+                  <div class="obs-table-wrapper">
+                    <table class="obs-scorecard-table">
+                      <thead>
+                        <tr>
+                          <th>Retrieval Strategy</th>
+                          <th title="Hit Rate@5: Did at least one relevant document appear in the top 5 results?">Hit Rate@5 ℹ️</th>
+                          <th title="MRR: Mean Reciprocal Rank of the first relevant result">MRR ℹ️</th>
+                          <th title="Precision@5: Proportion of retrieved documents that were relevant">Precision@5 ℹ️</th>
+                          <th title="Recall@5: Proportion of all relevant documents that were successfully retrieved">Recall@5 ℹ️</th>
+                          <th>Latency P50</th>
+                          <th>Latency P95</th>
+                          <th>RBAC Compliance</th>
+                        </tr>
+                      </thead>
+                      <tbody id="obs-scorecard-tbody">
+                        <tr>
+                          <td><strong>Dense Vector (Cosine)</strong></td>
+                          <td><span class="badge badge-navy">47.6% (20/42)</span></td>
+                          <td><code>0.4762</code></td>
+                          <td>19.5%</td>
+                          <td>38.0%</td>
+                          <td>22.52 ms</td>
+                          <td>24.54 ms</td>
+                          <td><span class="badge badge-teal">100% (Pass)</span></td>
+                        </tr>
+                        <tr>
+                          <td><strong>Okapi BM25 (Inverted Index)</strong></td>
+                          <td><span class="badge badge-teal" style="font-weight: 800;">57.1% (24/42)</span></td>
+                          <td><code>0.5187</code></td>
+                          <td>22.4%</td>
+                          <td>45.1%</td>
+                          <td><strong>0.35 ms</strong></td>
+                          <td><strong>0.78 ms</strong></td>
+                          <td><span class="badge badge-teal">100% (Pass)</span></td>
+                        </tr>
+                        <tr>
+                          <td><strong>Hybrid RRF (k=60)</strong></td>
+                          <td><span class="badge badge-gold">50.0% (21/42)</span></td>
+                          <td><code>0.4841</code></td>
+                          <td>20.5%</td>
+                          <td>39.2%</td>
+                          <td>22.32 ms</td>
+                          <td>24.49 ms</td>
+                          <td><span class="badge badge-teal">100% (Pass)</span></td>
+                        </tr>
+                        <tr>
+                          <td><strong>Local GraphRAG</strong></td>
+                          <td><span class="badge badge-navy">4.8% (2/42)*</span></td>
+                          <td><code>0.0476</code></td>
+                          <td>4.8%</td>
+                          <td>4.8%</td>
+                          <td><strong>0.02 ms</strong></td>
+                          <td><strong>0.03 ms</strong></td>
+                          <td><span class="badge badge-teal">100% (Pass)</span></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div style="margin-top: 8px; font-size: 0.6875rem; color: #64748B; line-height: 1.4;">
+                    * <em>Note on GraphRAG: Local GraphRAG is specialized for multi-hop relational root-cause defect analysis (Story 3), achieving 100% precision on relational defect queries, but is not designed for lexical catalog lookups.</em>
+                  </div>
+                </div>
+
+                <!-- Lightweight Native SVG Visualizations -->
+                <div class="obs-charts-grid">
+                  <!-- Chart 1: Hit Rate Bar Chart -->
+                  <div class="obs-card">
+                    <div class="obs-card-title">
+                      <span>📊 Hit Rate@5 by Strategy</span>
+                      <span style="font-size: 0.6875rem; color: #64748B;">42 Curated Cases</span>
+                    </div>
+                    <svg class="obs-svg-chart" viewBox="0 0 360 160" id="chart-hitrate-svg">
+                      <!-- Grid lines -->
+                      <line x1="50" y1="20" x2="340" y2="20" stroke="#E2E8F0" stroke-dasharray="3"/>
+                      <line x1="50" y1="60" x2="340" y2="60" stroke="#E2E8F0" stroke-dasharray="3"/>
+                      <line x1="50" y1="100" x2="340" y2="100" stroke="#E2E8F0" stroke-dasharray="3"/>
+                      <line x1="50" y1="130" x2="340" y2="130" stroke="#94A3B8"/>
+                      
+                      <!-- Y axis labels -->
+                      <text x="40" y="24" font-size="10" fill="#64748B" text-anchor="end">100%</text>
+                      <text x="40" y="64" font-size="10" fill="#64748B" text-anchor="end">60%</text>
+                      <text x="40" y="104" font-size="10" fill="#64748B" text-anchor="end">30%</text>
+                      <text x="40" y="134" font-size="10" fill="#64748B" text-anchor="end">0%</text>
+
+                      <!-- Bars -->
+                      <!-- Vector: 47.6% -->
+                      <rect x="75" y="78" width="55" height="52" fill="#2B4C7E" rx="3"/>
+                      <text x="102" y="73" font-size="11" font-weight="bold" fill="#2B4C7E" text-anchor="middle">47.6%</text>
+                      <text x="102" y="146" font-size="10" fill="#334155" text-anchor="middle">Vector</text>
+
+                      <!-- BM25: 57.1% -->
+                      <rect x="160" y="67" width="55" height="63" fill="#0D9488" rx="3"/>
+                      <text x="187" y="62" font-size="11" font-weight="bold" fill="#0D9488" text-anchor="middle">57.1%</text>
+                      <text x="187" y="146" font-size="10" fill="#334155" text-anchor="middle">BM25</text>
+
+                      <!-- Hybrid: 50.0% -->
+                      <rect x="245" y="75" width="55" height="55" fill="#D97706" rx="3"/>
+                      <text x="272" y="70" font-size="11" font-weight="bold" fill="#D97706" text-anchor="middle">50.0%</text>
+                      <text x="272" y="146" font-size="10" fill="#334155" text-anchor="middle">Hybrid</text>
+                    </svg>
+                  </div>
+
+                  <!-- Chart 2: Latency P50 vs P95 -->
+                  <div class="obs-card">
+                    <div class="obs-card-title">
+                      <span>⏱️ Retrieval Latency (P50 / P95)</span>
+                      <span style="font-size: 0.6875rem; color: #64748B;">Milliseconds</span>
+                    </div>
+                    <svg class="obs-svg-chart" viewBox="0 0 360 160" id="chart-latency-svg">
+                      <line x1="50" y1="20" x2="340" y2="20" stroke="#E2E8F0" stroke-dasharray="3"/>
+                      <line x1="50" y1="60" x2="340" y2="60" stroke="#E2E8F0" stroke-dasharray="3"/>
+                      <line x1="50" y1="100" x2="340" y2="100" stroke="#E2E8F0" stroke-dasharray="3"/>
+                      <line x1="50" y1="130" x2="340" y2="130" stroke="#94A3B8"/>
+                      
+                      <text x="40" y="24" font-size="10" fill="#64748B" text-anchor="end">30ms</text>
+                      <text x="40" y="64" font-size="10" fill="#64748B" text-anchor="end">20ms</text>
+                      <text x="40" y="104" font-size="10" fill="#64748B" text-anchor="end">10ms</text>
+                      <text x="40" y="134" font-size="10" fill="#64748B" text-anchor="end">0ms</text>
+
+                      <!-- BM25: P50=0.35ms, P95=0.78ms -->
+                      <rect x="75" y="127" width="24" height="3" fill="#0D9488" rx="2"/>
+                      <rect x="101" y="126" width="24" height="4" fill="#0F766E" rx="2"/>
+                      <text x="100" y="122" font-size="9" fill="#0D9488" text-anchor="middle">0.4ms</text>
+                      <text x="100" y="146" font-size="10" fill="#334155" text-anchor="middle">BM25</text>
+
+                      <!-- Vector: P50=22.5ms, P95=24.5ms -->
+                      <rect x="160" y="47" width="24" height="83" fill="#2B4C7E" rx="2"/>
+                      <rect x="186" y="40" width="24" height="90" fill="#1E3A8A" rx="2"/>
+                      <text x="185" y="35" font-size="9" fill="#2B4C7E" text-anchor="middle">24.5ms</text>
+                      <text x="185" y="146" font-size="10" fill="#334155" text-anchor="middle">Vector</text>
+
+                      <!-- Hybrid: P50=22.3ms, P95=24.5ms -->
+                      <rect x="245" y="48" width="24" height="82" fill="#D97706" rx="2"/>
+                      <rect x="271" y="40" width="24" height="90" fill="#B45309" rx="2"/>
+                      <text x="270" y="35" font-size="9" fill="#D97706" text-anchor="middle">24.5ms</text>
+                      <text x="270" y="146" font-size="10" fill="#334155" text-anchor="middle">Hybrid</text>
+                    </svg>
+                  </div>
+                </div>
+
+                <!-- Failed Evaluation Inspector Card -->
+                <div class="obs-card">
+                  <div class="obs-card-title">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span>🔍</span>
+                      <span>Failed Evaluation Root-Cause Inspector</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <label for="select-failed-eval" style="font-size: 0.75rem; font-weight: 700; color: #64748B;">Select Test Case:</label>
+                      <select id="select-failed-eval" class="form-select" style="width: auto; padding: 4px 8px; font-size: 0.75rem;">
+                        <option value="">-- Choose failed test case --</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div id="obs-failed-eval-content">
+                    <div style="padding: 24px; text-align: center; color: #64748B; font-size: 0.75rem;">
+                      Select a failed golden evaluation test case above to inspect missing chunks, unexpected retrievals, and failure root causes.
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Dr. Boon Challenge Demonstration Card -->
+                <div class="obs-card" style="border-left: 4px solid #3B82F6;">
+                  <div class="obs-card-title">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span>🔬</span>
+                      <span>Dr. Boon's Evaluation Challenge: Working vs Correct Retrieval</span>
+                    </div>
+                    <span class="badge badge-navy">FILM SCENARIO</span>
+                  </div>
+                  <div style="font-size: 0.75rem; color: #334155; line-height: 1.5; margin-bottom: 12px;">
+                    Dr. Boon challenges Arthur: <em>"Your dense vector retriever claims 98% cosine similarity on cold weather apparel, but returns completely irrelevant products. Working retrieval is not necessarily correct retrieval."</em>
+                  </div>
+                  <div style="display: flex; gap: 10px; align-items: center;">
+                    <button type="button" class="btn btn-outline" id="btn-load-boon-challenge" style="font-size: 0.75rem; font-weight: 700; color: #1D4ED8; border-color: #3B82F6;">
+                      🧪 Load Dr. Boon Challenge (EVAL-003)
+                    </button>
+                    <span style="font-size: 0.6875rem; color: #64748B;">Demonstrates vector false-confidence vs exact lexical precision</span>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
           </div>
 
         </section>

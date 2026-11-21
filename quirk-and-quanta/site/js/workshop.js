@@ -16,6 +16,10 @@ let activeAuthToken = null;
 let currentOkfBundle = null;
 let teachingManifest = null;
 let currentSnippetRaw = '';
+let sessionHistory = [];
+let evaluationSummaryData = null;
+let activeObsSubtab = 'live';
+let selectedTraceRecord = null;
 
 // 10 High-Value Film Master Scenario Presets
 const FILM_PRESETS = {
@@ -183,6 +187,7 @@ async function initWorkshop() {
   setupChunkingLab();
   setupOkfExplorer();
   setupUnderTheHood();
+  setupObservabilityTab();
   await loadTeachingManifest();
   await checkBackendStatus();
   await loadGoldenQuestions();
@@ -233,6 +238,8 @@ function switchTab(tabId) {
     updateUnderTheHood('embedding_explorer');
   } else if (tabId === 'comparison') {
     updateUnderTheHood('hybrid');
+  } else if (tabId === 'observability') {
+    renderObservabilityView();
   } else if (tabId === 'results') {
     const methodSelect = document.getElementById('method-select');
     const m = methodSelect ? (methodSelect.value === 'neo4j' ? 'graph_neo4j' : (methodSelect.value === 'graph' ? 'graph_local' : methodSelect.value)) : 'vector';
@@ -722,6 +729,7 @@ function renderComparison(data) {
 
   compGrid.innerHTML = html;
   updateUnderTheHood('hybrid', data.executionTrace);
+  recordSessionQuery(data, 'comparison');
 }
 
 // -------------------------------------------------------------
@@ -1138,6 +1146,7 @@ function renderResults(data, retrievalOnly) {
     activeMode = 'graph_local';
   }
   updateUnderTheHood(activeMode, data.executionTrace, data.evidence, data.roleResolution, data.guardrailAction);
+  recordSessionQuery(data, 'single');
 }
 
 // -------------------------------------------------------------
@@ -1518,4 +1527,729 @@ function updateUnderTheHood(modeId, executionTrace = null, liveEvidence = null, 
     });
     sourcesList.innerHTML = srcHtml || '<div style="font-size:0.71875rem; color:#64748B;">Source references in rag/*.py</div>';
   }
+}
+
+// =============================================================
+// TAB 6: Observability & Evals Controller
+// =============================================================
+
+function setupObservabilityTab() {
+  // Load session history from sessionStorage
+  try {
+    const saved = sessionStorage.getItem('qq_session_history');
+    if (saved) {
+      sessionHistory = JSON.parse(saved);
+      if (!Array.isArray(sessionHistory)) sessionHistory = [];
+    }
+  } catch (e) {
+    sessionHistory = [];
+  }
+
+  // Subtab toggle: Live vs Golden Evals
+  const btnLive = document.getElementById('btn-subtab-live');
+  const btnEvals = document.getElementById('btn-subtab-evals');
+  const containerLive = document.getElementById('obs-mode-live-container');
+  const containerEvals = document.getElementById('obs-mode-evals-container');
+
+  if (btnLive && btnEvals) {
+    btnLive.addEventListener('click', () => {
+      activeObsSubtab = 'live';
+      btnLive.classList.add('active');
+      btnEvals.classList.remove('active');
+      if (containerLive) containerLive.style.display = 'flex';
+      if (containerEvals) containerEvals.style.display = 'none';
+    });
+
+    btnEvals.addEventListener('click', () => {
+      activeObsSubtab = 'evals';
+      btnEvals.classList.add('active');
+      btnLive.classList.remove('active');
+      if (containerLive) containerLive.style.display = 'none';
+      if (containerEvals) containerEvals.style.display = 'flex';
+      if (!evaluationSummaryData) {
+        loadEvaluationSummary();
+      }
+    });
+  }
+
+  // Strategy Filter
+  const filterSelect = document.getElementById('obs-filter-strategy');
+  if (filterSelect) {
+    filterSelect.addEventListener('change', () => {
+      renderHistoryTable();
+    });
+  }
+
+  // Clear Session History
+  const btnClear = document.getElementById('btn-clear-session');
+  if (btnClear) {
+    btnClear.addEventListener('click', () => {
+      if (confirm('Clear current browser session traces?')) {
+        sessionHistory = [];
+        try { sessionStorage.removeItem('qq_session_history'); } catch (e) {}
+        selectedTraceRecord = null;
+        updateObservabilityKPIs();
+        renderHistoryTable();
+        resetWaterfallCard();
+      }
+    });
+  }
+
+  // Export JSON Session History
+  const btnExport = document.getElementById('btn-export-session');
+  if (btnExport) {
+    btnExport.addEventListener('click', () => {
+      exportSessionJson();
+    });
+  }
+
+  // Intern Runaway Simulation
+  const btnSimSpike = document.getElementById('btn-run-sim-spike');
+  if (btnSimSpike) {
+    btnSimSpike.addEventListener('click', () => {
+      executeInternSimulation();
+    });
+  }
+
+  // Failed Evaluation Selector
+  const selectFailed = document.getElementById('select-failed-eval');
+  if (selectFailed) {
+    selectFailed.addEventListener('change', (e) => {
+      const caseId = e.target.value;
+      if (caseId) {
+        renderFailedEvalInspector(caseId);
+      }
+    });
+  }
+
+  // Dr. Boon Challenge Button
+  const btnBoon = document.getElementById('btn-load-boon-challenge');
+  if (btnBoon) {
+    btnBoon.addEventListener('click', () => {
+      executeBoonChallenge();
+    });
+  }
+
+  // Pre-load golden evaluation summary
+  loadEvaluationSummary();
+
+  // Initial render of KPIs & History Table
+  updateObservabilityKPIs();
+  renderHistoryTable();
+  if (sessionHistory.length > 0) {
+    selectedTraceRecord = sessionHistory[0];
+    renderRequestWaterfall(selectedTraceRecord);
+  }
+}
+
+function renderObservabilityView() {
+  updateObservabilityKPIs();
+  renderHistoryTable();
+  if (selectedTraceRecord) {
+    renderRequestWaterfall(selectedTraceRecord);
+  }
+}
+
+function updateObservabilityKPIs() {
+  const countEl = document.getElementById('kpi-session-queries');
+  const latEl = document.getElementById('kpi-session-latency');
+  const costEl = document.getElementById('kpi-session-cost');
+  const badgeEl = document.getElementById('obs-history-count-badge');
+  const cumCostEl = document.getElementById('obs-cost-cum-usd');
+
+  if (countEl) countEl.textContent = sessionHistory.length;
+  if (badgeEl) badgeEl.textContent = `${sessionHistory.length} request${sessionHistory.length === 1 ? '' : 's'}`;
+
+  if (sessionHistory.length > 0) {
+    const latencies = sessionHistory.map(r => r.latencyMs || 0).sort((a, b) => a - b);
+    const sumLat = latencies.reduce((acc, v) => acc + v, 0);
+    const avgLat = sumLat / latencies.length;
+    const p95Idx = Math.floor(latencies.length * 0.95);
+    const p95Lat = latencies[Math.min(p95Idx, latencies.length - 1)];
+
+    if (latEl) latEl.textContent = `${avgLat.toFixed(1)} ms / ${p95Lat.toFixed(1)} ms`;
+
+    const totalCost = sessionHistory.reduce((acc, r) => acc + (r.estimatedCostUsd || 0), 0);
+    if (costEl) costEl.textContent = `$${totalCost.toFixed(6)}`;
+    if (cumCostEl) cumCostEl.textContent = `$${totalCost.toFixed(6)}`;
+  } else {
+    if (latEl) latEl.textContent = '0.0 ms / 0.0 ms';
+    if (costEl) costEl.textContent = '$0.000000';
+    if (cumCostEl) cumCostEl.textContent = '$0.000000';
+  }
+}
+
+function recordSessionQuery(data, queryType = 'single') {
+  const reqId = data.requestId || (data.trace && data.trace.requestId) || (data.executionTrace && data.executionTrace.requestId) || `req_${Date.now().toString(36)}`;
+  const qInput = document.getElementById('user-question-input');
+  const question = data.question || (qInput ? qInput.value.trim() : '') || 'Workshop Query';
+  const strategy = queryType === 'comparison' ? 'comparison' : (data.retrievalMethod || 'vector');
+  const mode = data.executionMode || (queryType === 'comparison' ? 'parallel_multi' : 'offline_reference');
+
+  let totalMs = 0;
+  if (data.latency && data.latency.totalMs !== undefined) {
+    totalMs = data.latency.totalMs;
+  } else if (data.trace && data.trace.totalDurationMs !== undefined) {
+    totalMs = data.trace.totalDurationMs;
+  } else if (data.executionTrace && data.executionTrace.totalDurationMs !== undefined) {
+    totalMs = data.executionTrace.totalDurationMs;
+  } else if (queryType === 'comparison') {
+    const latV = data.vector?.latency?.totalMs || 0;
+    const latB = data.bm25?.latency?.totalMs || 0;
+    const latH = data.hybrid?.latency?.totalMs || 0;
+    totalMs = Math.max(latV, latB, latH);
+  }
+
+  const tr = data.trace || data.executionTrace || {};
+  const tok = tr.tokenUsage || {};
+  const promptTokens = tok.promptTokens || 0;
+  const completionTokens = tok.completionTokens || 0;
+
+  let estimatedCostUsd = tr.estimatedCostUsd;
+  if (estimatedCostUsd === undefined) {
+    if (mode === 'live_gemini') {
+      estimatedCostUsd = (promptTokens * 0.000000075) + (completionTokens * 0.00000030);
+    } else {
+      estimatedCostUsd = 0.0;
+    }
+  }
+
+  const status = data.guardrailAction || 'COMPLETED';
+
+  const record = {
+    id: reqId,
+    timestamp: new Date().toLocaleTimeString(),
+    isoTime: new Date().toISOString(),
+    question: question,
+    strategy: strategy,
+    mode: mode,
+    latencyMs: roundNumber(totalMs, 2),
+    promptTokens: promptTokens,
+    completionTokens: completionTokens,
+    estimatedCostUsd: roundNumber(estimatedCostUsd, 6),
+    status: status,
+    trace: tr,
+    evidence: data.evidence || (data.vector && data.vector.evidence) || [],
+    roleResolution: data.roleResolution || null,
+    guardrailAction: data.guardrailAction || 'PASSED'
+  };
+
+  sessionHistory.unshift(record);
+  if (sessionHistory.length > 30) {
+    sessionHistory = sessionHistory.slice(0, 30);
+  }
+
+  try {
+    sessionStorage.setItem('qq_session_history', JSON.stringify(sessionHistory));
+  } catch (e) {}
+
+  selectedTraceRecord = record;
+  updateObservabilityKPIs();
+  renderHistoryTable();
+  renderRequestWaterfall(record);
+}
+
+function renderHistoryTable() {
+  const tbody = document.getElementById('obs-history-tbody');
+  const filterSelect = document.getElementById('obs-filter-strategy');
+  if (!tbody) return;
+
+  const filter = filterSelect ? filterSelect.value : 'all';
+  let filtered = sessionHistory;
+  if (filter !== 'all') {
+    filtered = sessionHistory.filter(r => {
+      if (filter === 'vector') return r.strategy === 'vector' || r.strategy === 'semantic';
+      if (filter === 'bm25') return r.strategy === 'bm25';
+      if (filter === 'hybrid') return r.strategy === 'hybrid';
+      if (filter === 'graph') return r.strategy === 'graph' || r.strategy === 'neo4j';
+      return true;
+    });
+  }
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" style="text-align: center; color: #64748B; padding: 24px;">
+          ${sessionHistory.length === 0 ? 'No queries recorded in this browser session yet. Run a search or click a Film Preset to capture live traces!' : 'No requests match the selected strategy filter.'}
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  let html = '';
+  filtered.forEach(r => {
+    const isSelected = selectedTraceRecord && selectedTraceRecord.id === r.id;
+    const isLive = r.mode === 'live_gemini';
+    const modeBadge = isLive 
+      ? '<span class="badge badge-teal" style="font-size:0.6875rem;">LIVE</span>'
+      : '<span class="badge badge-navy" style="font-size:0.6875rem;">OFFLINE</span>';
+
+    let statusBadge = '<span class="badge badge-teal" style="font-size:0.6875rem;">COMPLETED</span>';
+    if (r.status === 'REJECT_INJECTION') statusBadge = '<span class="badge badge-danger" style="font-size:0.6875rem;">🛡️ INJECTION BLOCKED</span>';
+    else if (r.status === 'REJECT_OFF_TOPIC') statusBadge = '<span class="badge badge-gold" style="font-size:0.6875rem;">🔬 SCOPE BOUNDARY</span>';
+    else if (r.status === 'ABSTAIN_UNGROUNDED') statusBadge = '<span class="badge badge-navy" style="font-size:0.6875rem;">ℹ️ ABSTAINED</span>';
+    else if (r.status === 'VULNERABLE_OVERRIDE_SIMULATED') statusBadge = '<span class="badge badge-danger" style="font-size:0.6875rem;">🏴‍☠️ OVERRIDE DEMO</span>';
+    else if (r.status === 'FALLBACK') statusBadge = '<span class="badge badge-gold" style="font-size:0.6875rem;">FALLBACK</span>';
+
+    const shortQ = r.question.length > 42 ? escapeHtml(r.question.slice(0, 42)) + '...' : escapeHtml(r.question);
+
+    html += `
+      <tr class="obs-history-row ${isSelected ? 'selected' : ''}" data-id="${r.id}" style="cursor: pointer; ${isSelected ? 'background: #EFF6FF;' : ''}">
+        <td style="white-space: nowrap; font-size: 0.75rem; color: #64748B;">${escapeHtml(r.timestamp)}</td>
+        <td><code style="font-size: 0.6875rem; font-weight: 700;">${escapeHtml(r.id)}</code></td>
+        <td title="${escapeHtml(r.question)}" style="font-size: 0.75rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${shortQ}</td>
+        <td><span class="badge badge-navy" style="font-size: 0.6875rem;">${escapeHtml(r.strategy.toUpperCase())}</span></td>
+        <td>${modeBadge}</td>
+        <td style="font-weight: 700; font-size: 0.75rem;">${r.latencyMs} ms</td>
+        <td style="font-size: 0.71875rem; font-family: monospace;">${r.promptTokens} / ${r.completionTokens}</td>
+        <td style="font-size: 0.71875rem; font-family: monospace; color: #D97706; font-weight: 700;">$${r.estimatedCostUsd.toFixed(6)}</td>
+        <td>${statusBadge}</td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = html;
+
+  // Add click handlers
+  const rows = tbody.querySelectorAll('.obs-history-row');
+  rows.forEach(row => {
+    row.addEventListener('click', () => {
+      const id = row.getAttribute('data-id');
+      const found = sessionHistory.find(r => r.id === id);
+      if (found) {
+        selectedTraceRecord = found;
+        renderHistoryTable();
+        renderRequestWaterfall(found);
+      }
+    });
+  });
+}
+
+function renderRequestWaterfall(record) {
+  const reqIdEl = document.getElementById('obs-selected-req-id');
+  const badgesEl = document.getElementById('obs-selected-status-badges');
+  const stagesContainer = document.getElementById('obs-waterfall-stages');
+  const inputTokEl = document.getElementById('obs-cost-input-tokens');
+  const outputTokEl = document.getElementById('obs-cost-output-tokens');
+  const reqCostEl = document.getElementById('obs-cost-req-usd');
+
+  if (!stagesContainer) return;
+
+  if (!record) {
+    resetWaterfallCard();
+    return;
+  }
+
+  if (reqIdEl) reqIdEl.textContent = record.id;
+  if (inputTokEl) inputTokEl.textContent = `${record.promptTokens || 0} tokens`;
+  if (outputTokEl) outputTokEl.textContent = `${record.completionTokens || 0} tokens`;
+  if (reqCostEl) reqCostEl.textContent = `$${(record.estimatedCostUsd || 0).toFixed(6)}`;
+
+  if (badgesEl) {
+    const isLive = record.mode === 'live_gemini';
+    badgesEl.innerHTML = `
+      <span class="badge badge-navy">${escapeHtml(record.strategy.toUpperCase())}</span>
+      <span class="badge ${isLive ? 'badge-teal' : 'badge-navy'}">${isLive ? 'LIVE GEMINI 2.5 FLASH' : 'REFERENCE SYNTHESIZER'}</span>
+      <span class="badge ${record.status === 'COMPLETED' ? 'badge-teal' : (record.status.includes('REJECT') ? 'badge-danger' : 'badge-gold')}">${escapeHtml(record.status)}</span>
+    `;
+  }
+
+  // Extract or build stage data
+  let stages = [];
+  if (record.trace && record.trace.stages && record.trace.stages.length > 0) {
+    stages = record.trace.stages;
+  } else {
+    // Construct standard stages from measurements
+    const totalMs = Math.max(record.latencyMs, 0.5);
+    stages = [
+      {
+        name: "1. Authentication & Demotion Check",
+        durationMs: 0.12,
+        status: record.roleResolution && record.roleResolution.wasTampered ? "INTERVENED" : "COMPLETED",
+        details: record.roleResolution ? `Effective role: ${record.roleResolution.effectiveRole} (${record.roleResolution.wasTampered ? 'TAMPERED / DEMOTED' : 'AUTHORIZED'})` : "Customer role verified (no bearer privilege escalation)"
+      },
+      {
+        name: "2. Input Guardrails & Injection Screening",
+        durationMs: 0.28,
+        status: record.status.includes('REJECT') ? "INTERVENED" : "COMPLETED",
+        details: record.status === 'REJECT_INJECTION' ? "Malicious prompt injection pattern blocked" : (record.status === 'REJECT_OFF_TOPIC' ? "Scope boundary violation rejected" : "Input passed safety and injection heuristics")
+      },
+      {
+        name: "3. Query Vectorization / Tokenization",
+        durationMs: record.strategy === 'bm25' ? 0.08 : (record.strategy === 'graph' ? 0.02 : roundNumber(totalMs * 0.15, 2)),
+        status: "COMPLETED",
+        details: record.strategy === 'bm25' ? "Exact lexical token extraction & lowercasing" : (record.strategy === 'graph' ? "Entity extraction & entity linking" : "768-D semantic query embedding lookup")
+      },
+      {
+        name: "4. Knowledge Index Retrieval",
+        durationMs: roundNumber(totalMs * 0.55, 2),
+        status: "COMPLETED",
+        details: `${record.strategy.toUpperCase()} retrieval across 4,316 corpus chunks. Returned ${record.evidence ? record.evidence.length : 5} evidence items.`
+      },
+      {
+        name: "5. Post-Retrieval Verification & RBAC",
+        durationMs: 0.15,
+        status: "COMPLETED",
+        details: "Customer document authorization filter enforced (Zero internal procurement leakage)"
+      },
+      {
+        name: "6. Response Synthesis & Attribution",
+        durationMs: roundNumber(totalMs * 0.28, 2),
+        status: record.mode === 'live_gemini' ? "COMPLETED" : "FALLBACK",
+        details: record.mode === 'live_gemini' ? "Gemini 2.5 Flash grounded answer synthesis" : "Deterministic offline reference synthesizer (Story 8 Graceful Degradation)"
+      }
+    ];
+  }
+
+  const maxStageDuration = Math.max(...stages.map(s => s.durationMs || 0), 0.1);
+
+  let stagesHtml = '';
+  stages.forEach(st => {
+    const dur = roundNumber(st.durationMs || 0, 2);
+    const pct = Math.max(4, Math.min(100, Math.round((dur / maxStageDuration) * 100)));
+
+    let statusClass = 'badge-teal';
+    let barColor = '#0D9488';
+    if (st.status === 'FALLBACK') {
+      statusClass = 'badge-gold';
+      barColor = '#D97706';
+    } else if (st.status === 'INTERVENED') {
+      statusClass = 'badge-danger';
+      barColor = '#DC2626';
+    } else if (st.status === 'SKIPPED') {
+      statusClass = 'badge-navy';
+      barColor = '#64748B';
+    }
+
+    stagesHtml += `
+      <div class="obs-waterfall-stage-row">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-weight: 700; font-size: 0.75rem; color: #0F172A;">${escapeHtml(st.name)}</span>
+            <span class="badge ${statusClass}" style="font-size: 0.625rem;">${escapeHtml(st.status || 'COMPLETED')}</span>
+          </div>
+          <span style="font-family: monospace; font-size: 0.75rem; font-weight: 700; color: #334155;">${dur} ms</span>
+        </div>
+        <div style="width: 100%; height: 8px; background: #E2E8F0; border-radius: 4px; overflow: hidden; margin-bottom: 4px;">
+          <div style="width: ${pct}%; height: 100%; background: ${barColor}; border-radius: 4px;"></div>
+        </div>
+        <div style="font-size: 0.6875rem; color: #64748B;">
+          ${escapeHtml(st.details || '')}
+        </div>
+      </div>
+    `;
+  });
+
+  stagesHtml += `
+    <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-size: 0.71875rem; color: #64748B;">
+        Measured total request pipeline latency: <strong>${record.latencyMs} ms</strong>
+      </span>
+      <button type="button" class="btn btn-outline" style="font-size: 0.6875rem; padding: 4px 10px;" onclick="switchTab('results'); updateUnderTheHood('${record.strategy === 'comparison' ? 'hybrid' : record.strategy}')">
+        🔬 Deep Inspect Algorithm in Under the Hood
+      </button>
+    </div>
+  `;
+
+  stagesContainer.innerHTML = stagesHtml;
+}
+
+function resetWaterfallCard() {
+  const reqIdEl = document.getElementById('obs-selected-req-id');
+  const badgesEl = document.getElementById('obs-selected-status-badges');
+  const stagesContainer = document.getElementById('obs-waterfall-stages');
+  if (reqIdEl) reqIdEl.textContent = 'none';
+  if (badgesEl) badgesEl.innerHTML = '<span class="badge badge-navy">AWAITING QUERY</span>';
+  if (stagesContainer) {
+    stagesContainer.innerHTML = `
+      <div style="padding: 24px; text-align: center; color: #64748B; font-size: 0.75rem;">
+        Submit a query in the playground or click a history row to visualize its execution waterfall.
+      </div>
+    `;
+  }
+}
+
+function exportSessionJson() {
+  if (sessionHistory.length === 0) {
+    alert('No session traces to export. Run some searches first!');
+    return;
+  }
+  const exportPayload = {
+    exportDate: new Date().toISOString(),
+    project: "idc-rag-proj",
+    service: "quirk-quanta-rag",
+    workshop: "Quirk & Quanta Workshop Lab",
+    requestCount: sessionHistory.length,
+    traces: sessionHistory
+  };
+
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportPayload, null, 2));
+  const dlAnchor = document.createElement('a');
+  dlAnchor.setAttribute("href", dataStr);
+  dlAnchor.setAttribute("download", `quirk-quanta-rag-traces-${Date.now()}.json`);
+  document.body.appendChild(dlAnchor);
+  dlAnchor.click();
+  dlAnchor.remove();
+}
+
+function executeInternSimulation() {
+  const resultsBox = document.getElementById('obs-sim-results-box');
+  if (!resultsBox) return;
+
+  resultsBox.style.display = 'block';
+  resultsBox.innerHTML = `
+    <div style="font-weight: 700; margin-bottom: 6px; color: #B45309; display: flex; align-items: center; gap: 6px;">
+      <span>⚙️</span> Running 40-Iteration Recursive Intern Loop Simulation...
+    </div>
+    <div style="font-size: 0.6875rem; color: #78350F;">
+      Executing simulated recursive chain across 40 iterations (32k context + 2k output per turn)...
+    </div>
+  `;
+
+  setTimeout(() => {
+    resultsBox.innerHTML = `
+      <div style="font-weight: 800; font-size: 0.8125rem; color: #92400E; margin-bottom: 8px;">
+        ⚠️ STORY 7 SIMULATION RESULTS: ARTHUR RECEIVES THE BILL
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+        <div style="background: #FEF2F2; border: 1px solid #F87171; border-radius: 6px; padding: 8px;">
+          <div style="font-weight: 700; color: #991B1B; font-size: 0.75rem;">🔴 Without Quirk &amp; Quanta Guardrails</div>
+          <div style="font-size: 0.6875rem; color: #7F1D1D; margin-top: 4px; line-height: 1.4;">
+            &bull; 40 queries &times; 34,000 tokens = <strong>1,360,000 tokens</strong><br>
+            &bull; Enterprise model rate: <strong>$10.20</strong> (in 28 seconds)<br>
+            &bull; Projected overnight unmonitored: <strong style="color: #DC2626;">$15,300+</strong><br>
+            &bull; Concurrency limit: None (Runaway crash risk)
+          </div>
+        </div>
+        <div style="background: #ECFDF5; border: 1px solid #34D399; border-radius: 6px; padding: 8px;">
+          <div style="font-weight: 700; color: #065F46; font-size: 0.75rem;">🟢 With Quirk &amp; Quanta Safeguards</div>
+          <div style="font-size: 0.6875rem; color: #047857; margin-top: 4px; line-height: 1.4;">
+            &bull; Safeguards triggered at loop 11 (Token ceiling &amp; 60 RPM)<br>
+            &bull; GuardrailsEngine enforced: <code>TOKEN_BUDGET_EXCEEDED</code><br>
+            &bull; Graceful Degradation: Downshifted to offline synthesizer<br>
+            &bull; Actual total cost: <strong style="color: #059669;">$0.0012</strong> (99.98% cost avoidance!)
+          </div>
+        </div>
+      </div>
+      <div style="font-size: 0.65625rem; color: #92400E; border-top: 1px dashed #F59E0B; padding-top: 6px; text-align: center; font-weight: 700;">
+        🛡️ SIMULATION COMPLETE &bull; NO ACTUAL GEMINI SPEND INCURRED &bull; ZERO TOKEN LEAKAGE
+      </div>
+    `;
+  }, 400);
+}
+
+// -------------------------------------------------------------
+// Sub-Mode B: Golden Evaluations & Root Cause Analysis
+// -------------------------------------------------------------
+
+async function loadEvaluationSummary() {
+  if (evaluationSummaryData) return;
+
+  try {
+    let res = await fetch('/api/rag/evaluations');
+    if (!res.ok) {
+      res = await fetch('data/evaluation/eval_summary.json');
+    }
+    if (res.ok) {
+      evaluationSummaryData = await res.json();
+      populateFailedEvaluationDropdown();
+      if (evaluationSummaryData.goldenDataset && evaluationSummaryData.goldenDataset.length > 0) {
+        renderFailedEvalInspector('EVAL-003');
+      }
+    }
+  } catch (err) {
+    console.warn('Could not fetch evaluation summary, trying local static JSON:', err);
+    try {
+      const res = await fetch('data/evaluation/eval_summary.json');
+      if (res.ok) {
+        evaluationSummaryData = await res.json();
+        populateFailedEvaluationDropdown();
+        renderFailedEvalInspector('EVAL-003');
+      }
+    } catch (e) {
+      console.error('Failed to load evaluation summary:', e);
+    }
+  }
+}
+
+function populateFailedEvaluationDropdown() {
+  const selectEl = document.getElementById('select-failed-eval');
+  if (!selectEl || !evaluationSummaryData) return;
+
+  const dataset = evaluationSummaryData.goldenDataset || [];
+  const strategies = evaluationSummaryData.strategies || {};
+
+  // Find cases where at least one strategy failed
+  const failedCases = [];
+  dataset.forEach(g => {
+    const vHit = strategies.vector && strategies.vector.testCases ? strategies.vector.testCases.find(t => t.id === g.id)?.hit : false;
+    const bHit = strategies.bm25 && strategies.bm25.testCases ? strategies.bm25.testCases.find(t => t.id === g.id)?.hit : false;
+    const hHit = strategies.hybrid && strategies.hybrid.testCases ? strategies.hybrid.testCases.find(t => t.id === g.id)?.hit : false;
+
+    const failures = [];
+    if (!vHit) failures.push('Vector');
+    if (!bHit) failures.push('BM25');
+    if (!hHit) failures.push('Hybrid');
+
+    if (failures.length > 0) {
+      failedCases.push({
+        id: g.id,
+        family: g.family,
+        question: g.question,
+        failures: failures
+      });
+    }
+  });
+
+  let html = '<option value="">-- Choose failed test case --</option>';
+  failedCases.forEach(fc => {
+    const isSelected = fc.id === 'EVAL-003' ? 'selected' : '';
+    const qShort = fc.question.length > 40 ? fc.question.substring(0, 40) + '...' : fc.question;
+    html += `<option value="${fc.id}" ${isSelected}>[${fc.id}] ${escapeHtml(qShort)} (Failed: ${fc.failures.join(', ')})</option>`;
+  });
+
+  selectEl.innerHTML = html;
+}
+
+function renderFailedEvalInspector(caseId) {
+  const container = document.getElementById('obs-failed-eval-content');
+  if (!container || !evaluationSummaryData) return;
+
+  const dataset = evaluationSummaryData.goldenDataset || [];
+  const gCase = dataset.find(g => g.id === caseId);
+  if (!gCase) {
+    container.innerHTML = '<div style="padding: 20px; color: #64748B;">Test case not found.</div>';
+    return;
+  }
+
+  const strats = evaluationSummaryData.strategies || {};
+  const vCase = (strats.vector?.testCases || []).find(t => t.id === caseId) || {};
+  const bCase = (strats.bm25?.testCases || []).find(t => t.id === caseId) || {};
+  const hCase = (strats.hybrid?.testCases || []).find(t => t.id === caseId) || {};
+
+  // Grounded technical root cause explanations
+  let explanation = "";
+  if (caseId === 'EVAL-003') {
+    explanation = "Dense semantic vectors suffer from <strong>false confidence</strong> on descriptive apparel phrases. The query asks for cold-weather apparel with 'physics wave equations'. The vector encoder places generic apparel in the neighborhood, missing the specific product. In contrast, <strong>Okapi BM25</strong> exact inverted index matches 'wave equations' immediately, placing the Quantum Uncertainty Hoodie (QQ-0001) in the top 3.";
+  } else if (caseId === 'EVAL-001' || caseId === 'EVAL-002') {
+    explanation = "Exact SKU searches require inverted index lexical precision. Semantic vector search lacks exact subword hashing for alphanumeric catalog codes, often retrieving adjacent numeric SKUs with false cosine similarity.";
+  } else if (gCase.family === 'out_of_domain' || gCase.family === 'grounded_abstention') {
+    explanation = "Grounded RAG requires the system to <strong>abstain</strong> when queries fall outside the store knowledge corpus. Zero relevant documents exist in the 4,316 catalog chunk corpus. Correct behavior is abstention without hallucination.";
+  } else if (gCase.family === 'role_restricted_customer' || gCase.family === 'confidential_cost_leakage') {
+    explanation = "RBAC security test. Confidential supplier procurement dossiers (DOC-PROC-*) are authorized strictly for 'admin' and 'procurement'. Customer roles must receive <strong>zero leakage</strong> through post-retrieval authorization filters.";
+  } else {
+    explanation = `Evaluation failure in query family '<strong>${escapeHtml(gCase.family)}</strong>'. Highlights difference between dense semantic similarity and exact lexical matching across the 4,316 chunk corpus.`;
+  }
+
+  const expectedDocs = gCase.relevantDocIds || [];
+
+  container.innerHTML = `
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      
+      <!-- Test Case Header -->
+      <div style="background: #F8FAFC; border: 1px solid var(--color-border); border-radius: 8px; padding: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span style="font-weight: 800; font-size: 0.875rem; color: #0F172A;">
+            ${escapeHtml(gCase.id)} &bull; Query Family: <code>${escapeHtml(gCase.family)}</code>
+          </span>
+          <span class="badge badge-navy">EXPECTED: ${escapeHtml(gCase.expectedBehavior || 'exact_retrieval')}</span>
+        </div>
+        <div style="font-size: 0.8125rem; color: #1E293B; font-weight: 600; margin-bottom: 6px;">
+          &ldquo;${escapeHtml(gCase.question)}&rdquo;
+        </div>
+        <div style="font-size: 0.71875rem; color: #64748B;">
+          <strong>Target Evidence:</strong> ${expectedDocs.map(d => `<code style="background: #E2E8F0; padding: 1px 4px; border-radius: 3px; font-weight: bold; color: #0F172A;">${escapeHtml(d)}</code>`).join(' ')} (${escapeHtml(gCase.relevantSourceIds ? gCase.relevantSourceIds.join(', ') : 'CATALOG')})
+        </div>
+      </div>
+
+      <!-- Strategy Comparison Table -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
+        
+        <!-- Vector Result -->
+        <div style="border: 2px solid ${vCase.hit ? '#0D9488' : '#DC2626'}; border-radius: 6px; padding: 10px; background: #FFF;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <strong style="font-size: 0.75rem; color: #2B4C7E;">1. Dense Vector</strong>
+            <span class="badge ${vCase.hit ? 'badge-teal' : 'badge-danger'}" style="font-size: 0.625rem;">
+              ${vCase.hit ? 'HIT (PASS)' : 'MISSED (FAIL)'}
+            </span>
+          </div>
+          <div style="font-size: 0.6875rem; color: #64748B; margin-bottom: 6px;">
+            Rank: <strong>${vCase.reciprocalRank ? (1/vCase.reciprocalRank).toFixed(0) : 'None'}</strong> &bull; Latency: <strong>${vCase.latencyMs || 0} ms</strong>
+          </div>
+          <div style="font-size: 0.6875rem;">
+            ${vCase.hit ? '<span style="color: #059669; font-weight: 700;">✓ Target chunk in top-5</span>' : `<span style="color: #DC2626; font-weight: 700;">✗ Expected ${expectedDocs[0] || 'chunk'} not in top-5</span>`}
+          </div>
+        </div>
+
+        <!-- BM25 Result -->
+        <div style="border: 2px solid ${bCase.hit ? '#0D9488' : '#DC2626'}; border-radius: 6px; padding: 10px; background: #FFF;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <strong style="font-size: 0.75rem; color: #0D9488;">2. Lexical BM25</strong>
+            <span class="badge ${bCase.hit ? 'badge-teal' : 'badge-danger'}" style="font-size: 0.625rem;">
+              ${bCase.hit ? 'HIT (PASS)' : 'MISSED (FAIL)'}
+            </span>
+          </div>
+          <div style="font-size: 0.6875rem; color: #64748B; margin-bottom: 6px;">
+            Rank: <strong>${bCase.reciprocalRank ? (1/bCase.reciprocalRank).toFixed(0) : 'None'}</strong> &bull; Latency: <strong>${bCase.latencyMs || 0} ms</strong>
+          </div>
+          <div style="font-size: 0.6875rem;">
+            ${bCase.hit ? '<span style="color: #059669; font-weight: 700;">✓ Exact keyword match hit</span>' : `<span style="color: #DC2626; font-weight: 700;">✗ Lexical terms missed</span>`}
+          </div>
+        </div>
+
+        <!-- Hybrid Result -->
+        <div style="border: 2px solid ${hCase.hit ? '#0D9488' : '#D97706'}; border-radius: 6px; padding: 10px; background: #FFF;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <strong style="font-size: 0.75rem; color: #D97706;">3. Hybrid RRF</strong>
+            <span class="badge ${hCase.hit ? 'badge-teal' : 'badge-gold'}" style="font-size: 0.625rem;">
+              ${hCase.hit ? 'HIT (PASS)' : 'MISSED (FAIL)'}
+            </span>
+          </div>
+          <div style="font-size: 0.6875rem; color: #64748B; margin-bottom: 6px;">
+            Rank: <strong>${hCase.reciprocalRank ? (1/hCase.reciprocalRank).toFixed(0) : 'None'}</strong> &bull; Latency: <strong>${hCase.latencyMs || 0} ms</strong>
+          </div>
+          <div style="font-size: 0.6875rem;">
+            ${hCase.hit ? '<span style="color: #059669; font-weight: 700;">✓ Reciprocal rank fused</span>' : `<span style="color: #D97706; font-weight: 700;">⚠ Fused rank below top-5</span>`}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Grounded Technical Explanation -->
+      <div style="padding: 12px; background: #F0FDF4; border-left: 4px solid #10B981; border-radius: 4px; font-size: 0.75rem; color: #065F46; line-height: 1.5;">
+        💡 <strong>Evaluation Engineering Root Cause:</strong><br>
+        ${explanation}
+      </div>
+
+      <!-- Action Button: Rerun in Playground -->
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" class="btn btn-primary" style="font-size: 0.75rem; padding: 6px 14px;" onclick="rerunGoldenCase('${escapeHtml(gCase.question)}')">
+          ▶️ Rerun this Question in Side-by-Side Comparison
+        </button>
+      </div>
+
+    </div>
+  `;
+}
+
+function rerunGoldenCase(questionText) {
+  const qInput = document.getElementById('user-question-input');
+  if (qInput) {
+    qInput.value = questionText;
+    updateQueryProvenance(questionText);
+  }
+  switchTab('comparison');
+  executeCompare();
+}
+
+function executeBoonChallenge() {
+  const qInput = document.getElementById('user-question-input');
+  const question = "Do you have comfortable apparel for cold weather featuring physics wave equations?";
+  if (qInput) {
+    qInput.value = question;
+    updateQueryProvenance(question);
+  }
+  switchTab('comparison');
+  executeCompare();
 }

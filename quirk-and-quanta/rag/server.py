@@ -266,6 +266,19 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self._send_json({"error": "Teaching manifest not found"}, status=404)
             return
 
+        elif path == "/api/rag/evaluations":
+            # Consolidated Golden Benchmark Evaluations across 42 curated cases
+            eval_file = os.path.join(SITE_DIR, "data", "evaluation", "eval_summary.json")
+            if not os.path.exists(eval_file):
+                eval_file = os.path.join(ROOT_DIR, "data", "evaluation", "eval_summary.json")
+            if os.path.exists(eval_file):
+                with open(eval_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                self._send_json(data)
+            else:
+                self._send_json({"error": "Evaluation artifacts not found"}, status=404)
+            return
+
         # Fallback to serving static storefront assets
         super().do_GET()
 
