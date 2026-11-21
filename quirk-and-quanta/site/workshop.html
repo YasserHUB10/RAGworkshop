@@ -274,6 +274,314 @@
       align-items: center;
       justify-content: center;
     }
+
+    /* =========================================================
+       UNDER THE HOOD: Educational Architecture & Code Styles
+       Optimized for 1080p/4K conference room projectors
+       ========================================================= */
+    .under-the-hood-card {
+      background: #FFFFFF;
+      border: 2px solid #0D9488;
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(13, 148, 136, 0.08);
+      position: relative;
+    }
+    .uth-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #E2E8F0;
+    }
+    .uth-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .uth-title {
+      font-size: 1.0625rem;
+      font-weight: 800;
+      color: #0F172A;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: -0.01em;
+    }
+    .uth-subtitle {
+      font-size: 0.78125rem;
+      color: #64748B;
+      font-weight: 500;
+    }
+    .uth-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .uth-mode-badge {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+    }
+
+    /* Section 1: Visual Pipeline Sequence */
+    .uth-section-title {
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #0F766E;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .uth-pipeline-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    .uth-stage-card {
+      background: #F8FAFC;
+      border: 1px solid #CBD5E1;
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .uth-stage-card.status-completed {
+      border-color: #10B981;
+      background: #ECFDF5;
+    }
+    .uth-stage-card.status-fallback {
+      border-color: #F59E0B;
+      background: #FFFBEB;
+    }
+    .uth-stage-card.status-intervened {
+      border-color: #EF4444;
+      background: #FEF2F2;
+    }
+    .uth-stage-card.status-skipped {
+      border-color: #94A3B8;
+      background: #F1F5F9;
+      opacity: 0.65;
+    }
+    .uth-stage-card.status-running {
+      border-color: #0D9488;
+      background: #F0FDFA;
+      animation: pulseStage 1.5s infinite;
+    }
+    @keyframes pulseStage {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.4); }
+      50% { box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.2); }
+    }
+    .uth-stage-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.6875rem;
+    }
+    .uth-stage-num {
+      font-weight: 800;
+      color: #0F172A;
+    }
+    .uth-stage-status-badge {
+      font-size: 0.625rem;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+    .status-completed .uth-stage-status-badge { background: #10B981; color: #FFFFFF; }
+    .status-fallback .uth-stage-status-badge { background: #F59E0B; color: #FFFFFF; }
+    .status-intervened .uth-stage-status-badge { background: #EF4444; color: #FFFFFF; }
+    .status-skipped .uth-stage-status-badge { background: #94A3B8; color: #FFFFFF; }
+    .status-running .uth-stage-status-badge { background: #0D9488; color: #FFFFFF; }
+    .status-planned .uth-stage-status-badge { background: #CBD5E1; color: #475569; }
+
+    .uth-stage-name {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #1E293B;
+      line-height: 1.25;
+    }
+    .uth-stage-meta {
+      font-size: 0.6875rem;
+      color: #64748B;
+      line-height: 1.2;
+    }
+
+    /* Section 2: Zero-Dependency Syntax Highlighted Pseudocode */
+    .uth-code-wrapper {
+      background: #0F172A;
+      border: 1px solid #1E293B;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+    .uth-code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 12px;
+      background: #1E293B;
+      border-bottom: 1px solid #334155;
+    }
+    .uth-code-label {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.6875rem;
+      color: #94A3B8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .uth-code-btn {
+      background: #334155;
+      color: #F8FAFC;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.15s;
+    }
+    .uth-code-btn:hover {
+      background: #0D9488;
+    }
+    .uth-code-block {
+      margin: 0;
+      padding: 12px 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.8125rem;
+      line-height: 1.55;
+      color: #E2E8F0;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    /* Syntax Highlighting Tokens */
+    .py-keyword { color: #F43F5E; font-weight: 700; }
+    .py-def { color: #38BDF8; font-weight: 700; }
+    .py-call { color: #67E8F9; }
+    .py-string { color: #A3E635; }
+    .py-comment { color: #64748B; font-style: italic; }
+    .py-number { color: #FBBF24; }
+    .py-builtin { color: #C084FC; }
+
+    /* Formula & Key Insight Boxes */
+    .uth-formula-box {
+      background: #F0FDFA;
+      border-left: 3px solid #0D9488;
+      padding: 8px 12px;
+      margin-bottom: 14px;
+      border-radius: 0 6px 6px 0;
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      font-size: 0.75rem;
+      color: #0F766E;
+    }
+
+    /* Section 3: Execution Evidence Grid */
+    .uth-evidence-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .uth-evidence-stat {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 6px;
+      padding: 8px 10px;
+    }
+    .uth-evidence-label {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #64748B;
+      margin-bottom: 2px;
+    }
+    .uth-evidence-value {
+      font-size: 0.8125rem;
+      font-weight: 800;
+      color: #0F172A;
+      font-family: ui-monospace, monospace;
+    }
+
+    /* Section 4: Expandable Deeper Explanation */
+    .uth-details {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .uth-summary {
+      padding: 10px 14px;
+      font-size: 0.78125rem;
+      font-weight: 700;
+      color: #0F766E;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .uth-summary:hover {
+      background: #F1F5F9;
+    }
+    .uth-details-content {
+      padding: 12px 14px;
+      border-top: 1px solid #E2E8F0;
+      font-size: 0.78125rem;
+      color: #334155;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .uth-callout-box {
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      line-height: 1.45;
+    }
+    .uth-callout-insight {
+      background: #EFF6FF;
+      border-left: 3px solid #3B82F6;
+      color: #1E40AF;
+    }
+    .uth-callout-failure {
+      background: #FFFBEB;
+      border-left: 3px solid #F59E0B;
+      color: #92400E;
+    }
+    .uth-sources-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .uth-source-item {
+      font-size: 0.71875rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .uth-source-item code {
+      background: #E2E8F0;
+      color: #0F172A;
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
   </style>
 </head>
 <body>
@@ -627,6 +935,102 @@
                 Ready
               </div>
             </div>
+
+            <!-- UNDER THE HOOD: Technical Learning Panel -->
+            <section id="under-the-hood-panel" class="under-the-hood-card" aria-label="Under the Hood Algorithmic Architecture">
+              <!-- Header -->
+              <div class="uth-header">
+                <div class="uth-title-group">
+                  <div class="uth-title">
+                    <span>⚙️</span>
+                    <span>UNDER THE HOOD: See the algorithm behind the answer</span>
+                  </div>
+                  <div id="uth-subtitle" class="uth-subtitle">
+                    Select a RAG mode or scenario to inspect the algorithmic pipeline, teaching pseudocode, and execution evidence.
+                  </div>
+                </div>
+                <div class="uth-controls">
+                  <span id="uth-active-badge" class="uth-mode-badge badge-teal">VANILLA VECTOR</span>
+                  <button type="button" id="btn-toggle-uth" class="btn btn-outline" style="font-size: 0.6875rem; padding: 4px 8px;" title="Minimize / Expand panel">
+                    Minimize 🔼
+                  </button>
+                </div>
+              </div>
+
+              <div id="uth-body-content">
+                <!-- 1. Algorithmic Pipeline Stages -->
+                <div class="uth-section-title">
+                  <span>🔄</span> Algorithmic Pipeline Stages &amp; Dynamic State
+                </div>
+                <div id="uth-pipeline-stages" class="uth-pipeline-grid">
+                  <!-- Injected dynamically based on active mode -->
+                </div>
+
+                <!-- 2. Teaching Pseudocode & Formula -->
+                <div class="uth-section-title">
+                  <span>💻</span> Educational Pseudocode (Production Implementation)
+                </div>
+                <div class="uth-code-wrapper">
+                  <div class="uth-code-header">
+                    <span class="uth-code-label">
+                      <span>🐍</span> Python (Standard Library) &bull; Educational pseudocode based on this implementation
+                    </span>
+                    <button type="button" id="btn-copy-uth-code" class="uth-code-btn" title="Copy code snippet to clipboard">
+                      📋 Copy
+                    </button>
+                  </div>
+                  <pre class="uth-code-block"><code id="uth-code-snippet"></code></pre>
+                </div>
+                <div id="uth-formula-box" class="uth-formula-box">
+                  <!-- Formula injected dynamically -->
+                </div>
+
+                <!-- 3. Execution Evidence & Provenance -->
+                <div class="uth-section-title">
+                  <span>⏱️</span> Execution Evidence &amp; Latency Provenance
+                </div>
+                <div id="uth-evidence-grid" class="uth-evidence-grid">
+                  <div class="uth-evidence-stat">
+                    <div class="uth-evidence-label">Execution Status</div>
+                    <div id="uth-stat-status" class="uth-evidence-value" style="color: #0D9488;">READY (PLANNED)</div>
+                  </div>
+                  <div class="uth-evidence-stat">
+                    <div class="uth-evidence-label">Pipeline Latency</div>
+                    <div id="uth-stat-latency" class="uth-evidence-value">0.0 ms</div>
+                  </div>
+                  <div class="uth-evidence-stat">
+                    <div class="uth-evidence-label">Role Resolution</div>
+                    <div id="uth-stat-auth" class="uth-evidence-value">customer (valid)</div>
+                  </div>
+                  <div class="uth-evidence-stat">
+                    <div class="uth-evidence-label">Grounding Guardrails</div>
+                    <div id="uth-stat-guard" class="uth-evidence-value">PASSED</div>
+                  </div>
+                </div>
+
+                <!-- 4. Deeper Technical Explanation & Source References -->
+                <details id="uth-details" class="uth-details">
+                  <summary class="uth-summary">
+                    <span>🔍 View actual source code mappings &amp; failure modes</span>
+                    <span>▾</span>
+                  </summary>
+                  <div class="uth-details-content">
+                    <div id="uth-callout-insight" class="uth-callout-box uth-callout-insight">
+                      <!-- Key Learning Point -->
+                    </div>
+                    <div id="uth-callout-failure" class="uth-callout-box uth-callout-failure">
+                      <!-- Common Failure Mode -->
+                    </div>
+                    <div>
+                      <strong style="font-size: 0.71875rem; color: #0F172A; display: block; margin-bottom: 4px;">Audited Source Modules:</strong>
+                      <div id="uth-sources-list" class="uth-sources-list">
+                        <!-- File/symbol links -->
+                      </div>
+                    </div>
+                  </div>
+                </details>
+              </div>
+            </section>
 
             <!-- Telemetry Bar -->
             <div id="telemetry-container" class="telemetry-bar">

@@ -14,6 +14,8 @@ let goldenQuestions = [];
 let isServerActive = false;
 let activeAuthToken = null;
 let currentOkfBundle = null;
+let teachingManifest = null;
+let currentSnippetRaw = '';
 
 // 10 High-Value Film Master Scenario Presets
 const FILM_PRESETS = {
@@ -180,8 +182,11 @@ async function initWorkshop() {
   setupPresets();
   setupChunkingLab();
   setupOkfExplorer();
+  setupUnderTheHood();
+  await loadTeachingManifest();
   await checkBackendStatus();
   await loadGoldenQuestions();
+  updateUnderTheHood('vector');
 }
 
 // -------------------------------------------------------------
@@ -219,10 +224,19 @@ function switchTab(tabId) {
 
   if (tabId === 'chunking') {
     loadChunkInspection();
+    updateUnderTheHood('chunking_structural');
   } else if (tabId === 'okf') {
     loadOkfBundle();
+    updateUnderTheHood('graph_local');
   } else if (tabId === 'embedding') {
     inspectActiveQueryVector();
+    updateUnderTheHood('embedding_explorer');
+  } else if (tabId === 'comparison') {
+    updateUnderTheHood('hybrid');
+  } else if (tabId === 'results') {
+    const methodSelect = document.getElementById('method-select');
+    const m = methodSelect ? (methodSelect.value === 'neo4j' ? 'graph_neo4j' : (methodSelect.value === 'graph' ? 'graph_local' : methodSelect.value)) : 'vector';
+    updateUnderTheHood(m);
   }
 }
 
@@ -267,6 +281,21 @@ function setupPresets() {
 
       updateMethodNote(p.method);
       updateQueryProvenance(p.question);
+
+      const presetModeMap = {
+        "1": "vector",
+        "2": "bm25",
+        "3": "hybrid",
+        "4": "vector",
+        "5": "graph_local",
+        "6": "grounding_abstention",
+        "7": "prompt_injection",
+        "8": "rbac_idor",
+        "9": "cost_observability",
+        "10": "vector"
+      };
+      const uthMode = presetModeMap[pid] || p.method;
+      updateUnderTheHood(uthMode);
 
       if (p.action === 'cost_spike') {
         switchTab('results');
@@ -345,6 +374,8 @@ function setupControls() {
   if (methodSelect) {
     methodSelect.addEventListener('change', (e) => {
       updateMethodNote(e.target.value);
+      const m = e.target.value === 'neo4j' ? 'graph_neo4j' : (e.target.value === 'graph' ? 'graph_local' : e.target.value);
+      updateUnderTheHood(m);
     });
   }
 
@@ -690,6 +721,7 @@ function renderComparison(data) {
   });
 
   compGrid.innerHTML = html;
+  updateUnderTheHood('hybrid', data.executionTrace);
 }
 
 // -------------------------------------------------------------
@@ -1091,6 +1123,21 @@ function renderResults(data, retrievalOnly) {
   });
 
   evidenceList.innerHTML = html;
+
+  // Update Under the Hood panel with live execution trace
+  let activeMode = data.retrievalMethod || 'vector';
+  if (data.guardrailAction === 'REJECT_INJECTION' || data.guardrailAction === 'VULNERABLE_OVERRIDE_SIMULATED') {
+    activeMode = 'prompt_injection';
+  } else if (data.guardrailAction === 'ABSTAIN_UNGROUNDED' || data.guardrailAction === 'REJECT_OFF_TOPIC') {
+    activeMode = 'grounding_abstention';
+  } else if (data.roleResolution && data.roleResolution.wasTampered) {
+    activeMode = 'rbac_idor';
+  } else if (data.retrievalMethod === 'neo4j' || (data.executionTrace && data.executionTrace.mode === 'neo4j')) {
+    activeMode = 'graph_neo4j';
+  } else if (data.retrievalMethod === 'graph' || (data.executionTrace && data.executionTrace.mode === 'graph')) {
+    activeMode = 'graph_local';
+  }
+  updateUnderTheHood(activeMode, data.executionTrace, data.evidence, data.roleResolution, data.guardrailAction);
 }
 
 // -------------------------------------------------------------
@@ -1249,4 +1296,226 @@ function escapeHtml(text) {
 
 function roundNumber(num, dec) {
   return Math.round(num * Math.pow(10, dec)) / Math.pow(10, dec);
+}
+
+// -------------------------------------------------------------
+// UNDER THE HOOD: Technical Learning Environment Controller
+// -------------------------------------------------------------
+
+async function loadTeachingManifest() {
+  try {
+    let res = await fetch('/api/rag/teaching');
+    if (!res.ok) {
+      res = await fetch('data/teaching/pipelines.json');
+    }
+    if (!res.ok) {
+      res = await fetch('../data/teaching/pipelines.json');
+    }
+    if (res.ok) {
+      teachingManifest = await res.json();
+    }
+  } catch (e) {
+    console.warn('Could not load teaching manifest:', e);
+  }
+}
+
+function setupUnderTheHood() {
+  const btnToggle = document.getElementById('btn-toggle-uth');
+  const bodyContent = document.getElementById('uth-body-content');
+  if (btnToggle && bodyContent) {
+    btnToggle.addEventListener('click', () => {
+      const isHidden = bodyContent.style.display === 'none';
+      bodyContent.style.display = isHidden ? 'block' : 'none';
+      btnToggle.textContent = isHidden ? 'Minimize 🔼' : 'Expand 🔽';
+    });
+  }
+
+  const btnCopy = document.getElementById('btn-copy-uth-code');
+  if (btnCopy) {
+    btnCopy.addEventListener('click', () => {
+      if (!currentSnippetRaw) return;
+      navigator.clipboard.writeText(currentSnippetRaw).then(() => {
+        const orig = btnCopy.textContent;
+        btnCopy.textContent = '✅ Copied!';
+        setTimeout(() => { btnCopy.textContent = orig; }, 2000);
+      }).catch(e => {
+        console.warn('Clipboard write failed:', e);
+      });
+    });
+  }
+}
+
+function highlightPython(code) {
+  if (!code) return '';
+  const tokenRegex = /(#[^\n]*)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')|(\b(?:def|class|return|if|elif|else|for|in|with|as|import|from|try|except|pass|not|and|or|True|False|None)\b)|(\b(?:len|range|print|dict|list|round|int|float|str)\b)|(\b[a-zA-Z_]\w*\b)(?=\()|(\b\d+(?:\.\d+)?\b)/g;
+
+  return code.replace(tokenRegex, (match, gComment, gString, gKeyword, gBuiltin, gCall, gNumber) => {
+    if (gComment) return `<span class="py-comment">${escapeHtml(gComment)}</span>`;
+    if (gString) return `<span class="py-string">${escapeHtml(gString)}</span>`;
+    if (gKeyword) return `<span class="py-keyword">${escapeHtml(gKeyword)}</span>`;
+    if (gBuiltin) return `<span class="py-builtin">${escapeHtml(gBuiltin)}</span>`;
+    if (gCall) return `<span class="py-call">${escapeHtml(gCall)}</span>`;
+    if (gNumber) return `<span class="py-number">${escapeHtml(gNumber)}</span>`;
+    return escapeHtml(match);
+  });
+}
+
+function getModeManifest(modeId) {
+  if (!teachingManifest || !teachingManifest.pipelines) return null;
+  if (teachingManifest.pipelines[modeId]) return teachingManifest.pipelines[modeId];
+  const aliasMap = {
+    'graph': 'graph_local',
+    'neo4j': 'graph_neo4j',
+    'semantic': 'chunking_structural',
+    'fixed': 'chunking_fixed',
+    'sliding': 'chunking_sliding',
+    'injection': 'prompt_injection',
+    'abstain': 'grounding_abstention',
+    'rbac': 'rbac_idor',
+    'cost': 'cost_observability',
+    'golden': 'golden_evaluations'
+  };
+  const targetKey = aliasMap[modeId] || modeId;
+  return teachingManifest.pipelines[targetKey] || teachingManifest.pipelines['vector'];
+}
+
+function updateUnderTheHood(modeId, executionTrace = null, liveEvidence = null, roleResolution = null, guardrailAction = null) {
+  const modeData = getModeManifest(modeId);
+  if (!modeData) return;
+
+  // 1. Header elements
+  const subtitleEl = document.getElementById('uth-subtitle');
+  const badgeEl = document.getElementById('uth-active-badge');
+  if (subtitleEl) subtitleEl.textContent = modeData.subtitle || modeData.description;
+  if (badgeEl) {
+    badgeEl.textContent = (modeData.badge || modeData.displayTitle || modeId).toUpperCase();
+    badgeEl.className = `uth-mode-badge ${modeId === 'bm25' ? 'badge-navy' : (modeId === 'hybrid' ? 'badge-gold' : 'badge-teal')}`;
+  }
+
+  // 2. Visual Pipeline Stages
+  const stagesContainer = document.getElementById('uth-pipeline-stages');
+  if (stagesContainer) {
+    let stagesHtml = '';
+    if (executionTrace && executionTrace.stages && executionTrace.stages.length > 0) {
+      // Live dynamic execution stages
+      executionTrace.stages.forEach((s, idx) => {
+        const st = (s.status || 'COMPLETED').toUpperCase();
+        let statusClass = 'status-completed';
+        if (st === 'FALLBACK') statusClass = 'status-fallback';
+        else if (st === 'INTERVENED') statusClass = 'status-intervened';
+        else if (st === 'SKIPPED') statusClass = 'status-skipped';
+        else if (st === 'RUNNING') statusClass = 'status-running';
+
+        stagesHtml += `
+          <div class="uth-stage-card ${statusClass}">
+            <div class="uth-stage-header">
+              <span class="uth-stage-num">${escapeHtml(s.name || `Stage ${idx + 1}`)}</span>
+              <span class="uth-stage-status-badge">${st}</span>
+            </div>
+            <div class="uth-stage-name">${escapeHtml(s.details || s.description || '')}</div>
+            <div class="uth-stage-meta">${s.durationMs !== undefined ? `Duration: <strong>${s.durationMs} ms</strong>` : ''}</div>
+          </div>
+        `;
+      });
+    } else {
+      // Planned pipeline stages from manifest
+      (modeData.stages || []).forEach(s => {
+        stagesHtml += `
+          <div class="uth-stage-card status-planned">
+            <div class="uth-stage-header">
+              <span class="uth-stage-num">${escapeHtml(s.name)}</span>
+              <span class="uth-stage-status-badge">PLANNED</span>
+            </div>
+            <div class="uth-stage-name">${escapeHtml(s.description)}</div>
+            <div class="uth-stage-meta">Awaiting query execution</div>
+          </div>
+        `;
+      });
+    }
+    stagesContainer.innerHTML = stagesHtml;
+  }
+
+  // 3. Educational Pseudocode
+  const codeSnippetEl = document.getElementById('uth-code-snippet');
+  if (codeSnippetEl) {
+    currentSnippetRaw = modeData.conceptualSnippet || '# Educational pseudocode based on this implementation';
+    codeSnippetEl.innerHTML = highlightPython(currentSnippetRaw);
+  }
+
+  // 4. Formula Box
+  const formulaBox = document.getElementById('uth-formula-box');
+  if (formulaBox) {
+    formulaBox.textContent = modeData.formula ? `📐 ${modeData.formula}` : '📐 Standard pipeline invariant: 100% deterministic attribution to retrieved chunks.';
+  }
+
+  // 5. Execution Evidence Grid
+  const statStatus = document.getElementById('uth-stat-status');
+  const statLatency = document.getElementById('uth-stat-latency');
+  const statAuth = document.getElementById('uth-stat-auth');
+  const statGuard = document.getElementById('uth-stat-guard');
+
+  if (statStatus) {
+    if (executionTrace) {
+      statStatus.textContent = `${(executionTrace.mode || modeId).toUpperCase()} (LIVE TRACE)`;
+      statStatus.style.color = '#059669';
+    } else {
+      statStatus.textContent = 'READY (PLANNED)';
+      statStatus.style.color = '#0D9488';
+    }
+  }
+
+  if (statLatency) {
+    if (executionTrace && executionTrace.totalDurationMs !== undefined) {
+      statLatency.textContent = `${executionTrace.totalDurationMs} ms`;
+    } else {
+      statLatency.textContent = '0.0 ms';
+    }
+  }
+
+  if (statAuth) {
+    if (roleResolution) {
+      statAuth.textContent = `${roleResolution.effectiveRole} (${roleResolution.wasTampered ? 'TAMPERED / DEMOTED' : 'AUTHORIZED'})`;
+      statAuth.style.color = roleResolution.wasTampered ? '#DC2626' : '#0F172A';
+    } else {
+      const roleSelect = document.getElementById('role-select');
+      statAuth.textContent = `${roleSelect ? roleSelect.value : 'customer'} (authorized)`;
+      statAuth.style.color = '#0F172A';
+    }
+  }
+
+  if (statGuard) {
+    if (guardrailAction) {
+      statGuard.textContent = guardrailAction;
+      statGuard.style.color = (guardrailAction === 'PASSED' || guardrailAction === 'PROCEED') ? '#059669' : '#DC2626';
+    } else {
+      statGuard.textContent = 'ARMED (WAITING)';
+      statGuard.style.color = '#64748B';
+    }
+  }
+
+  // 6. Deeper Explanation Details
+  const insightBox = document.getElementById('uth-callout-insight');
+  const failureBox = document.getElementById('uth-callout-failure');
+  const sourcesList = document.getElementById('uth-sources-list');
+
+  if (insightBox) {
+    insightBox.innerHTML = `💡 <strong>Key Learning Point:</strong> ${escapeHtml(modeData.keyLearningPoint || 'Attribution to grounded context eliminates hallucination.')}`;
+  }
+
+  if (failureBox) {
+    failureBox.innerHTML = `⚠️ <strong>Common Failure Mode:</strong> ${escapeHtml(modeData.commonFailureMode || 'Subword token drift or ungrounded generative speculation.')}`;
+  }
+
+  if (sourcesList) {
+    let srcHtml = '';
+    (modeData.sourceReferences || []).forEach(ref => {
+      srcHtml += `
+        <div class="uth-source-item">
+          <code>${escapeHtml(ref.file)} &rarr; ${escapeHtml(ref.symbol)}</code>
+          <span>${escapeHtml(ref.description)}</span>
+        </div>
+      `;
+    });
+    sourcesList.innerHTML = srcHtml || '<div style="font-size:0.71875rem; color:#64748B;">Source references in rag/*.py</div>';
+  }
 }

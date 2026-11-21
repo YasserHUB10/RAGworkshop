@@ -253,6 +253,19 @@ class QuirkHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             })
             return
 
+        elif path == "/api/rag/teaching":
+            # Educational "Under the Hood" Teaching Manifest
+            teaching_file = os.path.join(SITE_DIR, "data", "teaching", "pipelines.json")
+            if not os.path.exists(teaching_file):
+                teaching_file = os.path.join(ROOT_DIR, "data", "teaching", "pipelines.json")
+            if os.path.exists(teaching_file):
+                with open(teaching_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                self._send_json(data)
+            else:
+                self._send_json({"error": "Teaching manifest not found"}, status=404)
+            return
+
         # Fallback to serving static storefront assets
         super().do_GET()
 
